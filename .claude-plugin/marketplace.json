@@ -14,6 +14,15 @@
       "author": {
         "name": "Altien"
       }
+    },
+    {
+      "name": "private-mirror",
+      "displayName": "Private Mirror",
+      "source": "./private-mirror",
+      "description": "Set up the current empty directory as a private mirror of a public GitHub repo — like a fork, but private: pull updates from upstream but never push to it. Disables GitHub Actions before the first push, rewires remotes so plain push/pull only touch your private copy, and physically disables pushing to upstream. Exposes /mirror-repo.",
+      "author": {
+        "name": "Altien"
+      }
     }
   ]
 }

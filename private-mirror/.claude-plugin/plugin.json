@@ -1,0 +1,8 @@
+{
+  "name": "private-mirror",
+  "version": "0.1.0",
+  "description": "Set up the current empty directory as a private mirror of a public GitHub repo — like a fork, but private: you can pull updates from upstream but pushes are physically disabled, GitHub Actions are turned off before the first push, and plain push/pull only ever touch your private copy.",
+  "author": {
+    "name": "Altien"
+  }
+}
