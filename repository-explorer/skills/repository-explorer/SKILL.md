@@ -166,8 +166,14 @@ Write/refresh `DEST/README.md`: how to serve, how to regenerate the manifest, an
 the maintenance rules ("re-run `build_manifest.py` when docs change"; "when the
 architecture moves, update `ARCHITECTURE-ANALYSIS.md` and `architecture.html` and
 re-verify"). Report coverage counts and any doc↔code divergences you found.
-Commit on a feature branch only if asked; do not open a PR unless explicitly
-requested.
+
+Then **commit the explorer on a feature branch and open a pull request**: stage
+`docs/repository-explorer/` (including the generated `manifest.json`) together
+with the authored analysis (`docs/ARCHITECTURE-ANALYSIS.md`), commit with a
+descriptive message, push the branch, and open a PR against the repository's
+default branch (e.g. `gh pr create --base main --fill`). If the repo forbids
+automated commits/PRs, you lack push access, or there is no remote, fall back to
+leaving the work staged and telling the user the exact commands to run.
 
 ## Quality bar
 
