@@ -9,7 +9,7 @@ description: >
   when the user says "build a repository explorer", "make a browsable docs site
   for this repo", "give me a code-verified architecture overview with diagrams",
   "help me understand this repo before we edit it", or runs /repository-explorer.
-argument-hint: "[--browse-only] [--no-comments] [target path, default: repo root]"
+argument-hint: "[--browse-only] [--no-comments] [--update] [target path, default: repo root]"
 ---
 
 # Build a Repository Explorer
@@ -168,6 +168,43 @@ architecture moves, update `ARCHITECTURE-ANALYSIS.md` and `architecture.html` an
 re-verify"). Report coverage counts and any doc↔code divergences you found.
 Commit on a feature branch only if asked; do not open a PR unless explicitly
 requested.
+
+## Incremental updates & the doc-build changelog
+
+After the first build, most re-runs are **updates**, not rebuilds. The Golden
+rule already protects you: regenerating `manifest.json` never clobbers the
+authored analysis. The `--update` mode extends that to the analysis itself, so
+the Architecture & Technology pages track the code instead of going stale.
+
+Anchor on the last build. Keep a **"## Doc build log"** section at the foot of
+`ARCHITECTURE-ANALYSIS.md` (already indexed and in `keyDocs`), opening with a
+machine-readable `built_from: <sha>` line followed by a newest-first, authored
+changelog. An `--update` run:
+
+1. Read `built_from`. If absent, do a full Phase 2–3 pass.
+2. `git diff --name-only <built_from>..HEAD` (plus untracked) → the changed
+   subsystems. Map them to the analysis sections, stack rows, and diagrams they
+   back; print the mapping so the scope is auditable.
+3. Re-run `build_manifest.py` (cheap, full), then re-author **only** the affected
+   analysis sections and their SVG/mermaid diagrams, to the full Phase-3 bar.
+   Leave the rest untouched. Re-run `verify.cjs`.
+4. Set `built_from` to HEAD and prepend a changelog entry — date, commit range,
+   and **what analysis changed and why**, authored from reading the diff, never a
+   file-list dump.
+
+This is the **documentation's** history, distinct from the repo's own product
+`CHANGELOG.md` (which is browsed in the explorer, never edited here).
+
+## Phase 6 — Evolve this skill
+
+When a build surfaces a genuinely **reusable** improvement — an engine fix, a
+sharper analysis rule, a recurring config or discovery need — write it back into
+this skill's own directory (`SELF`) so the next invocation inherits it, rather
+than letting it die in the target repo. Keep `KIT/` repo-agnostic (name no host
+repo); fold better analysis patterns into `REF/ANALYSIS.md`. Run the kit's checks
+(`node verify.cjs`, `node --check`, `py_compile`) green before and after, keep the
+kit lean, and tell the user what you changed and why. Commit skill changes
+separately from the target-repo work.
 
 ## Quality bar
 

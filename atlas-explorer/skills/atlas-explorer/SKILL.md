@@ -12,7 +12,7 @@ description: >
   when the user says "build an atlas", "build a documentation navigator for this
   repo", "bind the docs to the code", "give me a doc explorer with drift
   detection", or runs /build-atlas.
-argument-hint: "[--no-curation] [--no-comments] [--manifest-only] [target dir, default: docs/atlas]"
+argument-hint: "[--no-curation] [--no-comments] [--manifest-only] [--update] [target dir, default: docs/atlas]"
 ---
 
 # Build The Atlas
@@ -67,6 +67,9 @@ neither is set, fall back to the directory that contains this `SKILL.md`. Then:
 - `--no-comments` — ship read-only: omit the commenting/feedback layer.
 - `--manifest-only` — run Phase 1 only; report the corpus + code surface that
   *would* be indexed, build nothing.
+- `--update` — incremental refresh against a prior build: re-run the mechanical
+  side, re-author only the curation whose backing source changed, and prepend a
+  doc-build changelog entry. See *Incremental updates* below.
 
 Parse the args, state the mode you're running, then proceed.
 
@@ -206,6 +209,46 @@ cross-link it from the repo's top-level docs (e.g. a row in `README.md` or
 `CLAUDE.md`/`AGENTS.md`). Report coverage counts and the drift you surfaced.
 Commit per phase on a feature branch with clear messages; open a PR only if
 asked.
+
+## Incremental updates & the doc-build changelog
+
+After the first build, most re-runs are **updates**, not rebuilds. The Atlas is
+already incremental on its mechanical side — re-running the server (or the ⟳
+reindex) refreshes the tree-derived index and never touches `curated/` or the
+durable comments. The `--update` mode extends that discipline to the **authored**
+curation, so summaries, claims, journeys, and diagrams track the code instead of
+silently going stale.
+
+Anchor each build on the commit it was authored against. Keep a single
+drift-exempt markdown doc — `docs/atlas/DOC-BUILD-LOG.md` — that the Atlas
+indexes and renders like any other doc: a machine-readable `<!-- built_from:
+<sha> -->` line plus a human-readable, newest-first changelog. Add it to a
+`corpus` include glob and list it under `drift_exempt` (it references code by
+design). Storing this as its own doc keeps the engine and the `curated/` schema
+untouched and repo-agnostic — do **not** add an engine route or new curated keys
+for it.
+
+An `--update` run:
+
+1. Read `built_from` from `DOC-BUILD-LOG.md`. If it is missing, fall back to a
+   full author pass (Phase 4).
+2. Compute the changed-source set — `git diff --name-only <built_from>..HEAD`
+   plus untracked docs/code — and map those paths to the curation they back: the
+   `summary`/`read_when` of a changed doc, the `claims` whose counted code moved,
+   the `journeys`/`diagrams` whose anchored heading or symbol shifted. Print the
+   mapping so the scope is auditable.
+3. Re-author **only** those entries, to the full Phase-4 bar; leave the rest
+   untouched. Re-run `verify.py` — anchors dangling from renamed or removed code
+   surface here and must be fixed.
+4. Update `built_from` to HEAD and prepend a changelog entry: the date, the
+   commit range, and **what curation changed and why**, authored after reading
+   the diff (e.g. "Refreshed for the Opus 4.8 migration: updated the
+   provider-abstraction summary, the agent-count claim, and the delivery-view
+   journey stop"). Never paste a mechanical file list — if it reads like
+   `git log`, it does not belong here.
+
+This is the **documentation's** history, distinct from the repo's own product
+`CHANGELOG.md` (which stays `drift_exempt` and is never edited here).
 
 ## Phase 6 — Evolve this skill
 

@@ -9,7 +9,7 @@ description: >
   whose steps slice their verbatim source. Use when the user says "build a
   skills explorer", "explore the prompts/skills in this repo", "document the
   agents", "make a prompt explorer", or runs /build-explorer.
-argument-hint: "[--manifest-only] [target path, default: repo root]"
+argument-hint: "[--manifest-only] [--update] [target path, default: repo root]"
 ---
 
 # Build a Skills & Prompts Explorer
@@ -142,6 +142,47 @@ reassemble data, and the rules *"when an artifact's workflow changes, update its
 graph"* and *"when its behaviour changes, update its assessment block."* Report
 the coverage counts. Commit on a feature branch only if asked; do not open a PR
 unless explicitly requested.
+
+## Incremental updates & the doc-build changelog
+
+After the first build, most re-runs are **updates**, not rebuilds. The Golden
+rule already protects you: regenerating `explorer-manifest.json` never clobbers
+the authored `data/*.json` graphs and assessments. The `--update` mode extends
+that to the authored data, so cards and workflow graphs track the artifacts
+instead of going stale.
+
+Anchor on the last build. Record the last-built commit as a `built_from` field in
+the manifest's coverage block (an `ADAPT`-layer field in `build_explorer.py`, not
+an engine change) and keep the human-readable, newest-first log in
+`DEST/README.md` under a **"## Doc build log"** heading. Under authored-only
+scope the SPA has no first-class changelog card — the README is the canonical
+log; say so plainly rather than faking a UI slot. An `--update` run:
+
+1. Read `built_from`. If absent, do a full Phase 2 author pass.
+2. `git diff --name-only <built_from>..HEAD` (plus untracked) → the changed
+   skill/agent/prompt/instruction sources. Map each to its artifact id; print the
+   mapping so the scope is auditable.
+3. Re-run `build_explorer.py` (cheap, full discovery), then re-author **only** the
+   `data/*.json` fragments for artifacts whose source changed — refresh the
+   assessment when behaviour changed, the workflow graph when the process changed.
+   Leave the rest untouched. Re-assemble and re-run `verify.cjs`.
+4. Set `built_from` to HEAD and prepend a changelog entry — date, commit range,
+   and **what changed and why**, authored from reading the diff, never a file-list
+   dump.
+
+This is the **documentation's** history, distinct from the repo's own product
+`CHANGELOG.md`.
+
+## Phase 6 — Evolve this skill
+
+When a build surfaces a genuinely **reusable** improvement — a discovery gap, a
+sharper authoring rule, a recurring config need — write it back into this skill's
+own directory so the next invocation inherits it, rather than letting it die in
+the target repo. Keep the kit repo-agnostic (name no host repo); fold better
+authoring patterns into `REF/AUTHORING.md`. Run `verify.cjs` (plus `node --check`
+and `py_compile`) green before and after, keep the kit lean, and tell the user
+what you changed and why. Commit skill changes separately from the target-repo
+work.
 
 ## Quality bar
 
