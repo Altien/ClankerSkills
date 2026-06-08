@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YOUR_REPO — Skills &amp; Prompts Explorer</title>
+  <meta name="description" content="Browsable explorer for every skill, agent, and prompt in this repository, each with an assessment card and a generated workflow diagram." />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <!-- ── Per-repo branding (the ONLY edit needed when reusing the engine elsewhere) ──
+       app.js reads this; all fields optional and fall back to generic defaults.
+       Set brand/tagline to your repo; accent + outputSchemaPath are optional. -->
+  <script>
+    window.EXPLORER_CONFIG = {
+      brand: "YOUR_REPO",                       // sidebar logo text (before the dot)
+      tagline: "Skills & Prompts Explorer",     // sidebar subtitle + document title
+      accent: null,                             // optional hex, e.g. "#2f6f4f", overrides --accent
+      outputSchemaPath: null                    // optional path shown in the Outputs fallback
+    };
+  </script>
+</head>
+<body>
+  <button class="menu-btn" id="menu-btn" aria-label="Toggle navigation">☰</button>
+  <div class="scrim"></div>
+
+  <div class="app">
+    <aside class="sidebar" aria-label="Artifact navigation">
+      <div class="brand">
+        <a href="#/" style="text-decoration:none">
+          <div class="logo" id="brand-logo">YOUR_REPO<span class="dot">.</span></div>
+          <div class="sub" id="brand-sub">Skills &amp; Prompts Explorer</div>
+        </a>
+      </div>
+      <div class="search-row">
+        <input id="search" type="search" placeholder="Search artifacts…" autocomplete="off" aria-label="Search" />
+        <span class="kbd">/</span>
+      </div>
+      <div class="kind-filter" id="kind-filter"></div>
+      <nav class="tree" id="tree"></nav>
+      <div class="theme-toggle">
+        <span>Theme</span>
+        <button id="theme-btn" aria-label="Toggle light/dark theme">☀ Light</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="content">
+        <div class="loading">Loading explorer…</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Curated graphs/editorial (authored) — loaded before the app so it can merge by id -->
+  <script src="assets/explorer-data.js"></script>
+  <!-- Single vendored asset: in-house minimal Markdown renderer (no network deps) -->
+  <script src="assets/marked.min.js"></script>
+  <!-- SPA: router, tree/search, detail rendering, SVG diagram generator -->
+  <script src="assets/app.js"></script>
+</body>
+</html>

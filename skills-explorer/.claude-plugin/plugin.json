@@ -1,0 +1,8 @@
+{
+  "name": "skills-explorer",
+  "version": "0.1.0",
+  "description": "Discovers every skill, agent, prompt-template, system-prompt, and instruction doc in a repository and builds a self-contained, dependency-light static explorer: each artifact gets a structured assessment card, a programmatic-surface panel (tool grants, MCP servers, invocation mode, bundled resources), and a generated workflow diagram whose steps slice their verbatim source section.",
+  "author": {
+    "name": "Altien"
+  }
+}
