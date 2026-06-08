@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ doc.title }} — {{ site.title }}{% endblock %}
+
+{% block content %}
+<div class="doc-split">
+  <article class="doc" data-doc-id="{{ doc.id }}">
+    <header class="doc-header">
+      <div class="doc-meta">
+        <span class="doc-path">{{ doc.id }}</span>
+        <button type="button" class="comment-btn doc-comment-btn" title="Comment on this document">💬</button>
+      </div>
+      {% set curation = curated.for_doc(doc.id) %}
+      {% if curation %}
+      <p class="doc-summary">{{ curation.summary }}
+        {% if curation.read_when %}<span class="read-when">{{ curation.read_when }}</span>{% endif %}
+      </p>
+      {% endif %}
+      <div class="comment-thread" data-anchor-kind="doc" hidden></div>
+    </header>
+
+    {% if artifact_link %}
+    <div class="artifact-banner">
+      <a href="{{ artifact_link[1] }}" target="_blank" rel="noopener">{{ artifact_link[0] }} →</a>
+    </div>
+    {% endif %}
+
+    {% for diagram, svg in diagrams %}
+    <section class="diagram-section">
+      <h2 class="diagram-title">{{ diagram.title }}</h2>
+      <div class="diagram-split">
+        <div class="diagram-canvas">{{ svg | safe }}</div>
+        <div id="diagram-panel-{{ diagram.id }}" class="diagram-panel">
+          <p class="comment-empty">Click any node to read its source — a doc section or the
+            code itself.</p>
+        </div>
+      </div>
+    </section>
+    {% endfor %}
+
+    {% if failing_claims %}
+    <div class="claim-banner">
+      ⚠ {{ failing_claims | length }} documented claim{{ "s" if failing_claims | length != 1 }}
+      in this file disagree{{ "s" if failing_claims | length == 1 }} with the tree:
+      <ul>
+        {% for result in failing_claims %}
+        <li><em>“{{ result.claim.quote }}”</em> — {{ result.message }}</li>
+        {% endfor %}
+      </ul>
+      <a href="/drift">Full drift report →</a>
+    </div>
+    {% endif %}
+
+    <div class="doc-body">
+      {{ content | safe }}
+    </div>
+
+    {% if backlinks %}
+    <footer class="doc-footer">
+      <h2 class="backlinks-title">Linked from</h2>
+      <ul class="backlinks">
+        {% for d in backlinks %}
+        <li><a href="/doc/{{ d.id }}">{{ d.title }}</a> <span class="doc-path">{{ d.id }}</span></li>
+        {% endfor %}
+      </ul>
+    </footer>
+    {% endif %}
+  </article>
+
+  <aside id="code-panel" class="code-panel" aria-label="Code evidence"></aside>
+</div>
+<script type="application/json" id="comment-counts">{{ section_comment_counts | tojson }}</script>
+<script src="/static/comments.js" defer></script>
+{% endblock %}

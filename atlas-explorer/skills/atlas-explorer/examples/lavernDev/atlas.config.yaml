@@ -1,0 +1,114 @@
+# The Atlas — repo-specific configuration.
+# This file (plus curated/) is the ONLY place repo specifics may live;
+# the engine is repo-agnostic (DESIGN.md §6).
+
+site:
+  title: "The Atlas"
+  subtitle: "Lavern's documentation, bound to its code"
+
+repo_root: ../..
+port: 8400
+
+# Docs whose broken code references are expected, not drift.
+# The changelog references files that were later removed — that's history.
+drift_exempt:
+  - "CHANGELOG.md"
+
+# tree-sitter grammars per file extension ("module:function").
+# Adding a language = pip install its grammar wheel + one entry here.
+languages:
+  - { extensions: [".ts"],  grammar: "tree_sitter_typescript:language_typescript" }
+  - { extensions: [".tsx"], grammar: "tree_sitter_typescript:language_tsx" }
+
+# First path segments eligible to become clickable code references.
+code_references:
+  roots:
+    - src
+    - viz
+    - scripts
+    - tests
+    - evals
+    - site
+    - menubar
+    - bin
+    - docs
+
+categories:
+  - { id: getting-started,     title: "Getting Started" }
+  - { id: architecture-design, title: "Architecture & Design" }
+  - { id: integration,         title: "Integration" }
+  - { id: audits-quality,      title: "Audits & Quality" }
+  - { id: evaluation,          title: "Evaluation" }
+  - { id: operations,          title: "Operations" }
+  - { id: governance,          title: "Governance" }
+  - { id: developer-tools,     title: "Developer Tools" }
+  - { id: agents-prompts,      title: "Agents & Prompts" }
+  - { id: marketing-site,      title: "Marketing Site" }
+
+corpus:
+  # Core corpus (issue 001). Agent prompts, site/ HTML and friends arrive in issue 008.
+  - include:
+      - "*.md"
+      - "docs/*.md"
+      - "docs/explorer/*.md"
+      - "docs/atlas/DESIGN.md"
+      - "evals/**/*.md"
+      - "src/providers/managed-agents/README.md"
+      - "src/templates/docs/*.md"
+      - "menubar/README.md"
+      - "samples/README.md"
+    exclude:
+      - "docs/atlas/issues/*"
+    depth: full
+    render: internal
+
+  # Agent prompts: searchable + readable as code, curated experience lives
+  # in the sibling explorer (artifact_links below).
+  - include:
+      - "src/agents/prompts/*.ts"
+    depth: search-only
+    render: internal
+
+  # Marketing site pages: text-extracted for search, opened via /raw.
+  - include:
+      - "site/index.html"
+      - "site/*/index.html"
+    depth: search-only
+    render: external
+
+# Deep-link prompt docs into the sibling explorer's curated experience.
+# (Run the explorer with: python docs/explorer/serve.py — port 8848 by default.)
+artifact_links:
+  - match: "src/agents/prompts/*"
+    title: "Open in the Skills & Prompts Explorer"
+    url_template: "http://127.0.0.1:8848/docs/explorer/index.html#/a/{id}"
+    manifest: "docs/explorer/explorer-manifest.json"
+
+# First match wins (fnmatch against the repo-relative doc id).
+category_rules:
+  - { match: "README.md",                       category: getting-started }
+  - { match: "QUICKSTART.md",                   category: getting-started }
+  - { match: "SOUL.md",                         category: getting-started }
+  - { match: "CLAUDE.md",                       category: architecture-design }
+  - { match: "CONNECTORS.md",                   category: integration }
+  - { match: "docs/managed-agents-migration.md", category: integration }
+  - { match: "docs/azure-migration.md",         category: integration }
+  - { match: "src/providers/managed-agents/*",  category: integration }
+  - { match: "docs/TECH_DEBT_AUDIT.md",         category: audits-quality }
+  - { match: "docs/SECURITY_AUDIT*.md",         category: audits-quality }
+  - { match: "evals/*",                         category: evaluation }
+  - { match: "docs/importing-datasets.md",      category: operations }
+  - { match: "docs/DEMO-SCRIPT.md",             category: operations }
+  - { match: "menubar/*",                       category: operations }
+  - { match: "samples/*",                       category: operations }
+  - { match: "src/templates/docs/*",            category: operations }
+  - { match: "CONTRIBUTING.md",                 category: governance }
+  - { match: "SECURITY.md",                     category: governance }
+  - { match: "CODE_OF_CONDUCT.md",              category: governance }
+  - { match: "AUTHORS.md",                      category: governance }
+  - { match: "CHANGELOG.md",                    category: governance }
+  - { match: "docs/explorer/*",                 category: developer-tools }
+  - { match: "docs/atlas/*",                    category: developer-tools }
+  - { match: "docs/*",                          category: architecture-design }
+  - { match: "src/agents/prompts/*",            category: agents-prompts }
+  - { match: "site/*",                          category: marketing-site }

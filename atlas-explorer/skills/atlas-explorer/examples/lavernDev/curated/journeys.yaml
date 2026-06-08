@@ -1,0 +1,221 @@
+# Authored journeys — sequenced paths through docs and code.
+# Every stop targets exactly one of doc/path; narration is hand-written.
+# Dangling targets surface on /drift (and fail verify.py), never a 500.
+
+- id: first-hour
+  title: "First hour with the repo"
+  intro: >-
+    The orientation path: what Lavern is, how to run it, where everything
+    lives, and how to navigate from here.
+  stops:
+    - doc: README.md
+      title: "The front door"
+      narration: >-
+        Read the framing before anything else: this is "not a product, but ten
+        things that could each be one." Notice the three modes (dashboard, CLI,
+        Clawern) and the three providers — most of the repo's structure follows
+        from those two choices. The "What 67 agents actually means" section is
+        the honest version of the headline number.
+    - doc: QUICKSTART.md
+      heading: pick-a-provider
+      title: "Pick a provider first"
+      narration: >-
+        The single most consequential setup decision. Anthropic gives the full
+        experience, Ollama runs free and local (the entire eval arc ran on a
+        local gemma2:2b at $0), Mistral keeps data in the EU. Everything else in
+        the quickstart flows from this choice.
+    - doc: CLAUDE.md
+      title: "The map of the territory"
+      narration: >-
+        This is the codebase topology — every directory, every module count,
+        written as context for AI assistants but equally useful for humans.
+        Treat it as the index you return to whenever you wonder "where does X
+        live?". The Atlas drift page continuously checks its quantitative
+        claims, so if a count here disagrees with the tree, you'll know.
+    - doc: SOUL.md
+      title: "The voice"
+      narration: >-
+        One screenful that explains why agent output reads the way it does:
+        plain language first, legal effect sacred, debate over polish. CLI and
+        Clawern use this file directly; the dashboard lets users override it.
+    - doc: docs/atlas/DESIGN.md
+      title: "How to navigate from here"
+      narration: >-
+        You're inside the Atlas right now — this is its design doc. The short
+        version: every doc binds to the code it cites (click the chips), drift
+        is checked continuously, and you can anchor feedback anywhere with 💬
+        and export it as an agent brief. The other three journeys go deeper.
+
+- id: engine
+  title: "How the engine works"
+  intro: >-
+    From the prescriptive architecture to the actual dispatch loop: the
+    4-stage pipeline as designed, then the code that runs engagements.
+  stops:
+    - doc: docs/architecture-spec.md
+      heading: core-decision-architecture
+      title: "The 4-stage pipeline"
+      narration: >-
+        Router → Specialists → Evaluator Gate → Output. Two things to hold
+        onto: the Router selects the *minimum viable* pipeline (not every
+        engagement gets the full bench), and the Evaluator must run on a
+        different model than the specialist it judges — the spec's guard
+        against correlated errors.
+    - path: src/dispatch.ts
+      symbol: dispatch
+      title: "Where an engagement starts"
+      narration: >-
+        The dispatch function is the real entry point: it selects the workflow
+        template, resolves the human-gate strategy, and sets the budget before
+        any agent runs. Fold open DispatchOptions above it to see every knob a
+        session accepts.
+    - path: src/orchestrator.ts
+      symbol: runTheShem
+      title: "The orchestration loop"
+      narration: >-
+        runTheShem is the core loop — dispatching agents, managing turns,
+        streaming events. The name is the repo's private joke made load-bearing:
+        the codebase is "The Shem", the name in the golem's mouth, and this
+        function is what animates it.
+    - path: src/workflows/executor.ts
+      symbol: runGenericWorkflow
+      title: "Workflow execution"
+      narration: >-
+        All nine workflow templates run through this one generic executor —
+        soul and personality injection happens here, so every template gets the
+        firm's voice without re-implementing it. The templates themselves are
+        data, not code: see src/workflows/templates/.
+    - path: src/agents/definitions.ts
+      title: "The bench"
+      narration: >-
+        The agent definitions: 59 specialist definitions that pair each prompt
+        with its model tier, tool allowlist and turn budget. The prompts
+        themselves are searchable in this Atlas (Agents & Prompts category) and
+        curated in the Explorer with workflow diagrams per agent.
+    - path: src/mcp/tools/debate-board.ts
+      title: "Debate is a feature"
+      narration: >-
+        The debate board is how "every agent must be challengeable" becomes
+        mechanical: findings require evidence citations, challenges require
+        counter-evidence, resolutions are auditable records. Note
+        sanitizeFindingContent — even agent prose gets cleaned before it enters
+        the record.
+
+- id: clawern
+  title: "Clawern deep-dive"
+  intro: >-
+    The autonomous pipeline — watch a folder, read what arrives, remember
+    across documents — and the seven-report eval arc that hardened it.
+  stops:
+    - doc: README.md
+      heading: clawern-commands
+      title: "What Clawern is"
+      narration: >-
+        Clawern is the law-firm-on-retainer mode: a daemon that watches
+        folders, processes documents within a budget, and delivers findings —
+        no dashboard required. These commands are the whole user surface;
+        everything else in this journey is what happens underneath.
+    - path: src/claw/watcher.ts
+      symbol: ClawWatcher
+      title: "The Watchman"
+      narration: >-
+        The filesystem watcher: debounced, symlink-protected, content-hash
+        deduplicated. In the lighthouse architecture this is the Watchman —
+        the component the evals showed routing 10/10 documents to the correct
+        type, route, and jurisdiction.
+    - path: src/claw/processor.ts
+      symbol: processDocument
+      title: "The Reader"
+      narration: >-
+        Parse → infer → dispatch → deliver, plus precedent lookup and
+        indexing. The eval arc's hardest-won fixes live downstream of here: the
+        chunker that collapsed CUAD's inline-numbered clauses into one chunk
+        (v1) and the closed-vocabulary party-name extraction (v3.2) both shaped
+        this pipeline.
+    - path: src/claw/precedent-board.ts
+      symbol: PrecedentBoard
+      title: "Institutional memory"
+      narration: >-
+        Cross-document finding persistence with O(1) dedup, relevance search,
+        decay and compaction. This is what makes the tenth document cheaper
+        than the first — by eval v3, precedent injection reached 59% of prompts
+        and tentative precedents were being promoted to confirmed.
+    - doc: evals/jv/RUBRIC.md
+      title: "The yardstick"
+      narration: >-
+        Pre-registered before the runs: expected risks per contract, Watchman
+        expectations, vocabulary the Reader should fire. Self-graded evals are
+        a real bias problem; pre-registration is the available mitigation, and
+        reading the rubric first is what makes the reports below checkable.
+    - doc: evals/jv/EVAL_REPORT.md
+      title: "v1 — the honest baseline"
+      narration: >-
+        Plumbing works, output isn't ship-ready: recall 2/12 on the first
+        contract because the chunker silently produced one chunk, and the
+        synthesis hallucinated the client profile. Every later report is a
+        response to a failure named here.
+    - doc: evals/jv/EVAL_REPORT_V3.md
+      title: "v3 — architecture vindicated"
+      narration: >-
+        Ten real CUAD contracts: jurisdiction leak 0/10, placeholders 0/10,
+        Curator output finally actionable. What remains — 5/10 docs
+        hallucinating memorized party names — is diagnosed as the model
+        ceiling, not the architecture. That diagnosis drives the next three
+        iterations.
+    - doc: evals/jv/EVAL_REPORT_V34.md
+      title: "v3.4 — arc closure"
+      narration: >-
+        Zero leaks in every category for the first time, with the full v1→v3.4
+        table at the end. The pattern worth stealing: every iteration names its
+        failure mode, fixes exactly that, and re-measures — at $0 on local
+        hardware, all seven runs reproducible.
+
+- id: integrating
+  title: "Integrating & operating"
+  intro: >-
+    The system's edges: providers and tools, the API surface, the remote
+    bridge, datasets, and the two live migration roadmaps.
+  stops:
+    - doc: CONNECTORS.md
+      title: "The authoritative index"
+      narration: >-
+        Single source of truth for everything external: three providers, all
+        21 MCP tools with file references, five datasets, nine services. When
+        you wonder "does Lavern talk to X?", check here before grepping.
+    - path: src/api/server.ts
+      symbol: startApiServer
+      title: "The API server"
+      narration: >-
+        Fastify with WebSocket event streaming. Note what registers
+        conditionally: in default LOCAL MODE the auth-shaped routes (auth,
+        billing, referral, Google OAuth) simply don't exist — the dashboard
+        runs as a synthetic local user and those endpoints 404.
+    - path: src/mcp/remote-bridge/server.ts
+      symbol: registerBridgeServer
+      title: "The remote bridge"
+      narration: >-
+        JSON-RPC 2.0 over HTTP exposing 12 Counsel tools to Anthropic Managed
+        Agents — shared-secret auth, per-session dispatch, Zod-validated
+        arguments, gated behind LAVERN_MANAGED_AGENTS_BRIDGE=1. This is
+        migration Stage 1, already landed.
+    - doc: docs/importing-datasets.md
+      title: "Feeding the knowledge base"
+      narration: >-
+        One idempotent script seeds all five datasets. Read the licensing
+        section even if you skip the rest — it's the clearest explanation in
+        the repo of what CC BY-SA actually obligates (distributed adaptations,
+        not the app querying the data) and why ContractNLI was dropped.
+    - doc: docs/managed-agents-migration.md
+      title: "Roadmap: Managed Agents"
+      narration: >-
+        The staged migration with red-line checks and kill switches at every
+        stage. The discipline to notice: no silent fallback — if a managed
+        session fails mid-flight, it fails cleanly rather than degrading to a
+        different execution lane.
+    - doc: docs/azure-migration.md
+      title: "Roadmap: Azure"
+      narration: >-
+        The cloud design, with per-service rationale (why pgvector over AI
+        Search, why Container Apps over AKS) and a real cost shape. Note the
+        boundary decisions: agents stay code-resident, only user content moves
+        to Blob, and Clawern deliberately stays local.

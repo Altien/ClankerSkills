@@ -1,0 +1,48 @@
+<div class="comment-thread-inner">
+  {% for comment in comments %}
+  <div class="comment {{ comment.status }}{% if comment.orphaned %} orphaned{% endif %}">
+    <div class="comment-meta">
+      <span class="comment-type">{{ comment.type }}</span>
+      <span class="comment-status">{{ comment.status }}</span>
+      {% if comment.orphaned %}<span class="comment-orphan" title="The anchor no longer resolves">orphaned</span>{% endif %}
+      <span class="comment-date">{{ comment.created_at[:10] }}</span>
+      <button type="button" class="copy-brief" data-brief-url="/api/comments/{{ comment.id }}/brief"
+              title="Copy agent brief to clipboard">⧉ Copy</button>
+    </div>
+    {% if comment.quote %}<blockquote class="comment-quote">{{ comment.quote }}</blockquote>{% endif %}
+    <p class="comment-body">{{ comment.body }}</p>
+    {% if comment.resolution_note %}
+    <p class="comment-resolution">↳ {{ comment.resolution_note }}</p>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="comment-empty">No comments here yet.</p>
+  {% endfor %}
+
+  <form class="comment-composer"
+        hx-post="/api/comments" hx-target="closest .comment-thread" hx-swap="innerHTML">
+    <input type="hidden" name="anchor_kind" value="{{ anchor.anchor_kind }}">
+    <input type="hidden" name="doc_id" value="{{ anchor.doc_id or '' }}">
+    <input type="hidden" name="heading" value="{{ anchor.heading or '' }}">
+    <input type="hidden" name="path" value="{{ anchor.path or '' }}">
+    <input type="hidden" name="symbol" value="{{ anchor.symbol or '' }}">
+    <input type="hidden" name="diagram_id" value="{{ anchor.diagram_id or '' }}">
+    <input type="hidden" name="node_id" value="{{ anchor.node_id or '' }}">
+    <input type="hidden" name="journey_id" value="{{ anchor.journey_id or '' }}">
+    <input type="hidden" name="stop_id" value="{{ anchor.stop_id or '' }}">
+    {% if quote %}
+    <blockquote class="comment-quote pending">{{ quote }}</blockquote>
+    <input type="hidden" name="quote" value="{{ quote }}">
+    {% else %}
+    <input type="hidden" name="quote" value="">
+    {% endif %}
+    <div class="composer-row">
+      <select name="type">
+        {% for t in comment_types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+      </select>
+      <textarea name="body" rows="2" required
+                placeholder="Feedback for the agent — what should change here?"></textarea>
+      <button type="submit">Comment</button>
+    </div>
+  </form>
+</div>

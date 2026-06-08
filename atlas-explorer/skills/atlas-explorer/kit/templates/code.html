@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}{{ code_path }} — {{ site.title }}{% endblock %}
+
+{% block content %}
+<div class="code-page">
+  {% if artifact_link %}
+  <div class="artifact-banner">
+    This file is a curated artifact —
+    <a href="{{ artifact_link[1] }}" target="_blank" rel="noopener">{{ artifact_link[0] }} →</a>
+  </div>
+  {% endif %}
+  <div id="code-panel" class="code-panel standalone">
+    {{ panel | safe }}
+  </div>
+</div>
+{% endblock %}

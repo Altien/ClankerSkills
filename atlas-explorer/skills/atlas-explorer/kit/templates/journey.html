@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ journey.title }} — {{ site.title }}{% endblock %}
+
+{% block content %}
+<div class="journey">
+  <header class="journey-header">
+    <h1 class="journey-title">{{ journey.title }}</h1>
+    <p class="journey-intro">{{ journey.intro }}</p>
+    <nav class="journey-progress" aria-label="Journey progress">
+      {% for s in journey.stops %}
+      <a class="journey-dot{% if loop.index == stop_number %} current{% endif %}"
+         href="/journey/{{ journey.id }}/{{ loop.index }}"
+         title="{{ loop.index }}. {{ s.label }}">{{ loop.index }}</a>
+      {% endfor %}
+    </nav>
+  </header>
+
+  <div class="journey-split">
+    <aside class="journey-narration">
+      <div class="journey-stop-meta">
+        <span class="hit-kind">stop {{ stop_number }} of {{ total_stops }}</span>
+        <span class="journey-stop-label">{{ stop.label }}</span>
+        <button class="panel-comment-btn" type="button" title="Comment on this stop"
+                hx-get="/partial/comments?anchor_kind=journey-stop&journey_id={{ journey.id }}&stop_id={{ stop_number }}"
+                hx-target="#journey-thread" hx-swap="innerHTML">💬</button>
+      </div>
+      <div id="journey-thread" class="comment-thread panel-thread"></div>
+      <div class="narration-body">{{ narration_html | safe }}</div>
+      <div class="journey-nav">
+        {% if stop_number > 1 %}
+        <a class="journey-btn" href="/journey/{{ journey.id }}/{{ stop_number - 1 }}">← Previous</a>
+        {% endif %}
+        {% if stop_number < total_stops %}
+        <a class="journey-btn primary" href="/journey/{{ journey.id }}/{{ stop_number + 1 }}">Next →</a>
+        {% else %}
+        <a class="journey-btn primary" href="/">Finish — back to the atlas</a>
+        {% endif %}
+      </div>
+    </aside>
+
+    <section class="journey-content{% if stop.path %} code-panel standalone{% endif %}">
+      {{ content | safe }}
+    </section>
+  </div>
+</div>
+{% endblock %}
