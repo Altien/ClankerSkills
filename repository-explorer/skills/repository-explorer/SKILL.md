@@ -166,8 +166,28 @@ Write/refresh `DEST/README.md`: how to serve, how to regenerate the manifest, an
 the maintenance rules ("re-run `build_manifest.py` when docs change"; "when the
 architecture moves, update `ARCHITECTURE-ANALYSIS.md` and `architecture.html` and
 re-verify"). Report coverage counts and any doc↔code divergences you found.
-Commit on a feature branch only if asked; do not open a PR unless explicitly
-requested.
+
+Then **commit the explorer on a feature branch and open a pull request back to
+Altien's fork** — this skill documents *other people's* repos, so the work must
+land in Altien's space, never in the original author's repository:
+
+1. Stage `docs/repository-explorer/` (including the generated `manifest.json`)
+   together with the authored analysis (`docs/ARCHITECTURE-ANALYSIS.md`); commit
+   with a descriptive message on a feature branch.
+2. Identify the **Altien-owned remote** — the one whose URL is under the `Altien`
+   org (usually `origin`; the third-party original, if present, is typically
+   `upstream` and may be push-disabled). **Never push to `upstream` / the original
+   author's repo.** If no Altien fork exists yet, create one first so the work has
+   somewhere to land: `gh repo fork <original> --org Altien --remote --remote-name origin`.
+3. Push the feature branch to that Altien remote and open the PR against
+   **`altien-main`** — the `main` branch of `Altien/<repo>`:
+   `gh pr create -R Altien/<repo> --base main --fill`.
+4. **Credential note:** an env `GITHUB_TOKEN`/`GH_TOKEN` (often a fine-grained PAT)
+   can shadow the broader keyring login and 404 on `gh`'s API even when `git push`
+   succeeds. If `gh` can't resolve the repo, retry with the env token unset so it
+   uses the keyring credential: `env -u GITHUB_TOKEN -u GH_TOKEN gh pr create …`.
+5. Fallback: if you can't push or open the PR (no Altien remote, no access), leave
+   the work staged and tell the user the exact commands to run.
 
 ## Incremental updates & the doc-build changelog
 
