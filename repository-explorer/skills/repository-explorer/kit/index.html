@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Repository Explorer</title>
+  <meta name="description" content="Browse and review this repository's Markdown documentation." />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <!-- ── Per-repo branding + behaviour (the ONLY block you edit when reusing the engine) ──
+       app.js reads this; all fields optional and fall back to generic defaults.
+         brand            sidebar/title name (e.g. "LQ.AI")
+         tagline          subtitle (default "Repository Explorer")
+         brandMark        2-char logo mark (default: brand initials)
+         intro            one-paragraph home blurb
+         accent           optional hex, overrides --accent (e.g. "#2f5bd9")
+         repoRoot         path from this dir back to repo root (default "../../")
+         outputDir        this explorer's path in the repo (for help text)
+         storageNamespace localStorage prefix for comments (default "repoexp")
+         commenting       false to ship a read-only browser (default true)
+         keyDocs          ["README.md", ...] curated "Start here" cards
+         analysisPages    [{href,title,badge,sub}] generated analysis pages -->
+  <script>
+    window.EXPLORER_CONFIG = {
+      brand: "YOUR_REPO",
+      tagline: "Repository Explorer",
+      brandMark: null,
+      intro: null,
+      accent: null,
+      repoRoot: "../../",
+      outputDir: "docs/repository-explorer",
+      storageNamespace: "repoexp",
+      commenting: true,
+      keyDocs: [],
+      analysisPages: [
+        // { href: "architecture.html", title: "Architecture & Technology",
+        //   badge: "✓ Code-verified",
+        //   sub: "System topology, request flow, and the technology stack — read from the source." }
+      ]
+    };
+  </script>
+</head>
+<body>
+  <div id="app" class="layout">
+    <!-- Sidebar: file tree + search -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <a class="brand" href="#" data-nav="home">
+          <span class="brand-mark" id="brand-mark">RX</span>
+          <span class="brand-text">
+            <strong id="brand-name">Repository</strong>
+            <small id="brand-tagline">Repository Explorer</small>
+          </span>
+        </a>
+      </div>
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Filter files…" autocomplete="off" spellcheck="false" />
+        <kbd>/</kbd>
+      </div>
+      <nav class="tree" id="tree" aria-label="File tree"></nav>
+      <div class="sidebar-foot">
+        <button class="ghost" data-action="expand-all" title="Expand all folders">Expand</button>
+        <button class="ghost" data-action="collapse-all" title="Collapse all folders">Collapse</button>
+      </div>
+    </aside>
+
+    <!-- Main column -->
+    <main class="main">
+      <header class="topbar">
+        <button class="icon-btn only-mobile" id="menu-toggle" aria-label="Toggle file tree">☰</button>
+        <div class="crumbs" id="crumbs"></div>
+        <div class="topbar-actions">
+          <span class="review-count" id="review-count" title="Total review comments">0 comments</span>
+          <button class="icon-btn" id="comments-toggle" title="Toggle comments panel">💬</button>
+          <button class="icon-btn" id="review-menu-btn" title="Review actions">⋯</button>
+          <button class="icon-btn" id="theme-toggle" title="Toggle light / dark">◐</button>
+        </div>
+      </header>
+
+      <div class="content-row">
+        <article class="doc" id="doc" tabindex="-1"></article>
+
+        <!-- Comments / review panel -->
+        <aside class="comments" id="comments" hidden>
+          <div class="comments-head">
+            <strong>Review comments</strong>
+            <button class="icon-btn" id="comments-close" title="Close">✕</button>
+          </div>
+          <div class="comments-meta" id="comments-meta"></div>
+          <div class="comments-list" id="comments-list"></div>
+          <form class="comment-form" id="comment-form" hidden>
+            <div class="comment-quote" id="comment-quote" hidden></div>
+            <textarea id="comment-body" rows="3" placeholder="Write a review comment…"></textarea>
+            <div class="comment-form-actions">
+              <button type="button" class="ghost" id="comment-cancel">Cancel</button>
+              <button type="submit" class="primary">Comment</button>
+            </div>
+          </form>
+          <button class="primary block" id="comment-add-doc">+ Comment on this document</button>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <!-- Floating "comment on selection" button -->
+  <button id="selection-comment" class="selection-comment" hidden>💬 Comment</button>
+
+  <!-- Review actions menu -->
+  <div id="review-menu" class="menu" hidden>
+    <button data-review="set-author">Set reviewer name…</button>
+    <button data-review="export-json">Export comments (JSON)</button>
+    <button data-review="export-md">Copy comments as Markdown</button>
+    <button data-review="import-json">Import comments (JSON)…</button>
+    <button data-review="clear" class="danger">Clear all comments…</button>
+    <input type="file" id="import-file" accept="application/json,.json" hidden />
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- Vendored Markdown renderer (zero network deps). -->
+  <script src="assets/marked.min.js"></script>
+  <!-- Vendored Mermaid — renders ```mermaid fences. Optional: delete this line and
+       assets/mermaid.min.js to ship without it (fences then show as code). -->
+  <script src="assets/mermaid.min.js"></script>
+  <!-- SPA: tree, router, Markdown rendering, review/commenting, mermaid wiring. -->
+  <script src="assets/app.js"></script>
+</body>
+</html>

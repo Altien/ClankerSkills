@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<!--
+  ARCHITECTURE / ANALYSIS PAGE — TEMPLATE. Adapt per repo, then save as
+  <outputDir>/architecture.html (or another name listed in EXPLORER_CONFIG.analysisPages).
+  Also copy kit/analysis/architecture.css → <outputDir>/assets/architecture.css.
+
+  This is hand-authored HTML with INLINE SVG — NOT generated from Markdown — so the
+  diagrams are crisp vectors that follow the explorer's light/dark theme (the SVG
+  shapes are styled by classes in architecture.css using CSS variables).
+
+  RULES (see reference/ANALYSIS.md):
+   • Read the code; every claim links to the file that backs it. Source files open
+     raw via REPO_ROOT (../../<path>); Markdown docs open in the explorer
+     (index.html#/<path>). Never invent.
+   • Flag doc↔code divergences honestly in a callout.
+   • Replace every {{PLACEHOLDER}} and the example diagrams below.
+-->
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{BRAND}} · Architecture &amp; Technology</title>
+  <meta name="description" content="Code-verified architecture and technology overview, with vector diagrams." />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="stylesheet" href="assets/architecture.css" />
+</head>
+<body class="arch-body">
+  <header class="arch-top">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">{{MARK}}</span>
+      <span class="brand-text"><strong>{{BRAND}}</strong><small>Architecture &amp; Technology</small></span>
+    </a>
+    <div class="arch-top-actions">
+      <span class="verified-badge" title="Every claim on this page was checked against the source on this date.">✓ Code-verified · {{DATE}}</span>
+      <a class="ghost" href="index.html">← Explorer</a>
+      <button class="icon-btn" id="theme-toggle" title="Toggle light / dark">◐</button>
+    </div>
+  </header>
+
+  <main class="arch-main">
+    <section class="arch-hero">
+      <h1>Architecture &amp; Technology</h1>
+      <p class="lede">{{ONE_PARAGRAPH_WHAT_THIS_SYSTEM_IS — how the major pieces fit together, in plain prose.}}</p>
+      <p class="note">
+        This page was written by reading the code, not the docs. Each claim links to the file that backs it.
+        Where the prose docs and the code diverge, that is flagged inline.
+      </p>
+      <div class="metrics">
+        <!-- ADAPT: 4–6 verifiable, sourced numbers (LOC, services, endpoints, migrations…) -->
+        <div class="metric"><b>{{N}}</b><span>{{services}}</span></div>
+        <div class="metric"><b>{{N}}</b><span>{{LOC · backend}}</span></div>
+        <div class="metric"><b>{{N}}</b><span>{{key metric}}</span></div>
+        <div class="metric"><b>{{N}}</b><span>{{key metric}}</span></div>
+      </div>
+    </section>
+
+    <!-- ===================== EXAMPLE 1 — layered system topology ===================== -->
+    <section class="arch-section">
+      <h2>1 · System architecture</h2>
+      <p>{{Describe the request path and the trust/responsibility boundaries. Link the entry points, e.g.
+        <a href="../../path/to/entry.ext" target="_blank" rel="noopener"><code>path/to/entry.ext</code></a>.}}</p>
+
+      <figure class="diagram-fig">
+        <!-- WORKED EXAMPLE: replace boxes/labels with the real components. The classes
+             (band, nb, nb-accent, nb-boundary, nb-data, ed/ed-accent, nt/ns) are themed
+             by architecture.css. Keep one marker <defs> per SVG. -->
+        <svg class="diagram" viewBox="0 0 900 470" role="img" aria-label="System architecture (example — replace)">
+          <defs>
+            <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+              <path class="ed-head" d="M0,0 L7,3 L0,6 Z" />
+            </marker>
+            <marker id="arrA" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+              <path class="ed-head-accent" d="M0,0 L7,3 L0,6 Z" />
+            </marker>
+          </defs>
+
+          <!-- data plane (right column) -->
+          <text class="band-label" x="720" y="120">DATA</text>
+          <rect class="band" x="714" y="130" width="160" height="210" rx="10" />
+          <rect class="nb-data" x="728" y="150" width="132" height="60" rx="8" />
+          <text class="nt" x="794" y="185" text-anchor="middle">{{Database}}</text>
+          <rect class="nb-data" x="728" y="226" width="132" height="56" rx="8" />
+          <text class="nt" x="794" y="258" text-anchor="middle">{{Cache/Queue}}</text>
+          <rect class="nb-data" x="728" y="298" width="132" height="30" rx="8" />
+          <text class="ns" x="794" y="318" text-anchor="middle">{{Object store}}</text>
+
+          <!-- clients -->
+          <text class="band-label" x="40" y="34">CLIENTS</text>
+          <rect class="band" x="34" y="44" width="640" height="92" rx="10" />
+          <rect class="nb-accent" x="58" y="66" width="270" height="52" rx="8" />
+          <text class="nt" x="193" y="97" text-anchor="middle">{{Primary client (stack)}}</text>
+          <rect class="nb" x="360" y="66" width="290" height="52" rx="8" />
+          <text class="nt" x="505" y="97" text-anchor="middle">{{Other surface}}</text>
+          <line class="ed" x1="354" y1="136" x2="354" y2="176" marker-end="url(#arr)" />
+
+          <!-- application tier -->
+          <text class="band-label" x="40" y="170">APPLICATION · {{framework · LOC}}</text>
+          <rect class="band-strong" x="34" y="180" width="640" height="120" rx="10" />
+          <rect class="nb" x="58" y="200" width="280" height="40" rx="7" />
+          <text class="nt2" x="198" y="225" text-anchor="middle">{{API surface / routers}}</text>
+          <rect class="nb" x="360" y="200" width="290" height="40" rx="7" />
+          <text class="nt2" x="505" y="225" text-anchor="middle">{{Core services}}</text>
+          <rect class="nb" x="58" y="250" width="592" height="36" rx="7" />
+          <text class="ns" x="354" y="272" text-anchor="middle">{{Workers / background jobs}}</text>
+          <line class="ed" x1="650" y1="220" x2="712" y2="190" marker-end="url(#arr)" />
+          <line class="ed" x1="650" y1="250" x2="712" y2="254" marker-end="url(#arr)" />
+
+          <!-- boundary tier -->
+          <line class="ed-accent" x1="354" y1="300" x2="354" y2="338" marker-end="url(#arrA)" />
+          <text class="band-label accent" x="40" y="332">{{SECURITY BOUNDARY (if any)}}</text>
+          <rect class="nb-boundary" x="34" y="342" width="640" height="48" rx="10" />
+          <text class="ns" x="354" y="370" text-anchor="middle">{{What crosses the boundary, and why it's the only thing that does}}</text>
+
+          <!-- downstream -->
+          <line class="ed-accent" x1="354" y1="390" x2="354" y2="420" marker-end="url(#arrA)" />
+          <text class="band-label" x="40" y="414">{{EXTERNAL / PROVIDERS}}</text>
+          <rect class="band" x="34" y="424" width="640" height="34" rx="10" />
+          <text class="ns" x="354" y="446" text-anchor="middle">{{Downstream dependencies}}</text>
+        </svg>
+        <figcaption>Verified against <code>{{key files}}</code>. {{Legend if you use status dots.}}</figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================== EXAMPLE 2 — horizontal flow / pipeline ===================== -->
+    <section class="arch-section">
+      <h2>2 · {{A key request flow / pipeline}}</h2>
+      <p>{{Trace the actual coded order. Branch arrows (errors, short-circuits) tell the honest story.}}</p>
+      <figure class="diagram-fig">
+        <svg class="diagram" viewBox="0 0 900 200" role="img" aria-label="Pipeline (example — replace)">
+          <defs>
+            <marker id="parr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+              <path class="ed-head" d="M0,0 L7,3 L0,6 Z" />
+            </marker>
+          </defs>
+          <text class="dnote" x="20" y="40">{{in}} →</text>
+          <rect class="nb" x="20"  y="64" width="150" height="60" rx="8" /><text class="pn" x="95"  y="99" text-anchor="middle">{{Stage 1}}</text>
+          <rect class="nb" x="200" y="64" width="150" height="60" rx="8" /><text class="pn" x="275" y="99" text-anchor="middle">{{Stage 2}}</text>
+          <rect class="nb-accent" x="380" y="64" width="150" height="60" rx="8" /><text class="pn" x="455" y="99" text-anchor="middle">{{Decision}}</text>
+          <rect class="nb" x="560" y="64" width="150" height="60" rx="8" /><text class="pn" x="635" y="99" text-anchor="middle">{{Stage 3}}</text>
+          <rect class="nb" x="740" y="64" width="140" height="60" rx="8" /><text class="pn" x="810" y="99" text-anchor="middle">{{Output}}</text>
+          <line class="ed" x1="170" y1="94" x2="200" y2="94" marker-end="url(#parr)" />
+          <line class="ed" x1="350" y1="94" x2="380" y2="94" marker-end="url(#parr)" />
+          <line class="ed" x1="530" y1="94" x2="560" y2="94" marker-end="url(#parr)" />
+          <line class="ed" x1="710" y1="94" x2="740" y2="94" marker-end="url(#parr)" />
+        </svg>
+        <figcaption>Order verified in <code>{{file}}</code>.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================== Technology stack ===================== -->
+    <section class="arch-section">
+      <h2>3 · Technology stack</h2>
+      <p>Read from the dependency manifests, not the prose.</p>
+      <div class="stack-grid">
+        <div class="stack-card">
+          <h3>{{Service}} · <code>{{dir}}</code></h3>
+          <p class="src">source: <a href="../../{{dir}}/{{manifest}}" target="_blank" rel="noopener"><code>{{dir}}/{{manifest}}</code></a></p>
+          <table class="kv">
+            <tr><th>{{Area}}</th><td>{{library — what it's for}}</td></tr>
+            <tr><th>{{Area}}</th><td>{{library}}</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="callout callout-warn">
+        <strong>Doc ↔ code divergence (verified):</strong> {{State any place the README/docs disagree with the
+        code — e.g. a stale figure, a feature described as wired that is only stubbed. If none found, say so.}}
+      </div>
+    </section>
+
+    <!-- ===================== Shipped vs deferred ===================== -->
+    <section class="arch-section">
+      <h2>4 · Shipped vs. deferred</h2>
+      <div class="state-grid">
+        <div class="state-col shipped"><h3>✓ Shipped &amp; wired</h3><ul><li>{{…}}</li></ul></div>
+        <div class="state-col partial"><h3>◐ Partial / scaffold</h3><ul><li>{{…}}</li></ul></div>
+        <div class="state-col deferred"><h3>○ Not built</h3><ul><li>{{…}}</li></ul></div>
+      </div>
+    </section>
+
+    <footer class="arch-foot">
+      <p><strong>How this page was produced:</strong> by reading {{the services, manifests, and config}} directly
+        and cross-checking against {{the repo's own status doc, if any}}. Hand-authored HTML with inline SVG.
+        Reflects the tree at {{commit/date}}.</p>
+      <p><a href="index.html">← Back to the Repository Explorer</a></p>
+    </footer>
+  </main>
+
+  <script>
+    // Theme is shared with the explorer via the same localStorage key.
+    (function () {
+      var KEY = "repoexp-theme";
+      document.documentElement.setAttribute("data-theme", localStorage.getItem(KEY) || "light");
+      document.getElementById("theme-toggle").addEventListener("click", function () {
+        var cur = document.documentElement.getAttribute("data-theme");
+        var next = cur === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem(KEY, next);
+      });
+    })();
+  </script>
+</body>
+</html>

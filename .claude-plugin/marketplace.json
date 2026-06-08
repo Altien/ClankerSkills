@@ -23,6 +23,15 @@
       "author": {
         "name": "Altien"
       }
+    },
+    {
+      "name": "repository-explorer",
+      "displayName": "Repository Explorer",
+      "source": "./repository-explorer",
+      "description": "Builds a self-contained, static Repository Explorer for any repo: a browsable Markdown documentation site (file tree, search, rendered mermaid, and a review/commenting layer) plus a code-verified Architecture & Technology analysis published as both Markdown and expressive HTML with hand-authored inline-SVG diagrams. Browse the docs, then read an honest, source-linked walkthrough of how the system actually fits together. Exposes /repository-explorer.",
+      "author": {
+        "name": "Altien"
+      }
     }
   ]
 }
