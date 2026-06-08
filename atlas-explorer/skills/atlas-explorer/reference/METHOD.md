@@ -20,7 +20,7 @@ places you author in the target repo: **`atlas.config.yaml`** and **`curated/`**
 | `category_rules` | Ordered fnmatch rules mapping doc ids to categories (first match wins; an unassigned doc fails startup — no doc falls through the cracks) |
 | `code_references.roots` | First path segments eligible to become code chips (the allowlist that keeps prose like "and/or" out of drift) |
 | `drift_exempt` | Doc-id patterns whose broken refs are expected (changelogs reference removed files by design) |
-| `languages` | Extension → tree-sitter grammar (`"module:function"`). Adding a language = `pip install` its grammar wheel + one entry. Pygments handles highlighting for every language already; the grammar is only for symbol slicing + fold regions |
+| `languages` | Extension → tree-sitter grammar (`"module:function"`). **TypeScript and Python grammars ship in the kit's `requirements.txt`** (`.py`, `.ts`, `.tsx` slice out of the box); adding another language = `pip install` its grammar wheel + one entry. Pygments handles highlighting for every language already; the grammar is only for symbol slicing + fold regions. The extractor understands JS/TS declarations (functions, classes + methods, interfaces, enums, exported consts) and Python (`def`/`class`, decorated defs incl. routes, and class methods) |
 | `artifact_links` | Deep-links into sibling tools via a JSON manifest (`source_path` → `id` mapping + URL template) |
 | `db_path` / `curated_dir` | Storage locations (FTS index + durable comments; the authored YAML dir) |
 

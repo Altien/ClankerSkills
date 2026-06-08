@@ -69,7 +69,13 @@ def _count_lines(config: AtlasConfig, symbols, args: dict) -> int:
     target = config.repo_root / path
     if not target.is_file():
         raise ValueError(f"no such file: {path}")
-    return target.read_text(encoding="utf-8", errors="replace").count("\n") + 1
+    text = target.read_text(encoding="utf-8", errors="replace")
+    if not text:
+        return 0
+    # Match `wc -l` (the convention doc authors quote) for the common
+    # newline-terminated file, while still counting a final line that lacks a
+    # trailing newline. `count("\n") + 1` over-counts every normal file by one.
+    return text.count("\n") + (0 if text.endswith("\n") else 1)
 
 
 COUNTERS = {

@@ -91,6 +91,68 @@ def test_bad_grammar_fails_loudly():
         SymbolIndexer((LanguageSpec(extensions=(".zz",), grammar="no_such_module:nope"),))
 
 
+# ── Python extraction (tree-sitter-python) ──
+
+PY_SPECS = (
+    LanguageSpec(extensions=(".py",), grammar="tree_sitter_python:language"),
+)
+
+PY_SAMPLE = textwrap.dedent(
+    '''\
+    import os
+
+
+    def dispatch(opts):
+        helper = 1
+        return helper
+
+
+    @router.get("/health")
+    async def health():
+        return {"ok": True}
+
+
+    class Engine:
+        def start(self):
+            return 1
+
+        @property
+        def state(self):
+            return self._state
+    '''
+)
+
+
+@pytest.fixture()
+def py_repo(tmp_path):
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "engine.py").write_text(PY_SAMPLE, encoding="utf-8")
+    return tmp_path
+
+
+def test_python_extraction_kinds_spans_and_methods(py_repo):
+    fs = SymbolIndexer(PY_SPECS).index_for(py_repo / "src" / "engine.py")
+    by_name = {s.qualified: s for s in fs.flat()}
+
+    assert by_name["dispatch"].kind == "function"
+    # a decorated (async) route is found, and its span starts at the decorator
+    health = by_name["health"]
+    assert health.kind == "function"
+    assert PY_SAMPLE.splitlines()[health.start_line].lstrip().startswith("@router.get")
+    # class + nested methods (including a decorated @property)
+    assert by_name["Engine"].kind == "class"
+    assert by_name["Engine.start"].kind == "method"
+    assert by_name["Engine.state"].kind == "method"
+
+
+def test_python_find_supports_bare_and_qualified(py_repo):
+    fs = SymbolIndexer(PY_SPECS).index_for(py_repo / "src" / "engine.py")
+    assert fs.find("Engine.state") is not None
+    assert fs.find("state") is not None
+    assert fs.find("nonexistent") is None
+
+
 def test_mtime_cache_invalidation(ts_repo):
     indexer = SymbolIndexer(TS_SPECS)
     path = ts_repo / "src" / "engine.ts"

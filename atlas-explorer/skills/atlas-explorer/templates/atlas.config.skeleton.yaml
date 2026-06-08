@@ -60,11 +60,13 @@ drift_exempt:
 
 # tree-sitter grammars per file extension, as "module:function". Needed only for
 # symbol slicing + fold regions (Pygments highlights everything regardless).
-# Add a language = pip install its grammar wheel + one entry here.
+# TypeScript AND Python grammars ship in the kit's requirements.txt; keep only
+# the entries whose extensions this repo actually has. Add another language =
+# pip install its grammar wheel + one entry here.
 languages:
-  - { extensions: [".ts"],  grammar: "tree_sitter_typescript:language_typescript" }
-  - { extensions: [".tsx"], grammar: "tree_sitter_typescript:language_tsx" }
-  # - { extensions: [".py"], grammar: "tree_sitter_python:language" }    # pip install tree-sitter-python
+  - { extensions: [".py"],  grammar: "tree_sitter_python:language" }              # bundled
+  - { extensions: [".ts"],  grammar: "tree_sitter_typescript:language_typescript" } # bundled
+  - { extensions: [".tsx"], grammar: "tree_sitter_typescript:language_tsx" }        # bundled
   # - { extensions: [".go"], grammar: "tree_sitter_go:language" }        # pip install tree-sitter-go
   # - { extensions: [".rs"], grammar: "tree_sitter_rust:language" }      # pip install tree-sitter-rust
 

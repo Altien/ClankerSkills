@@ -82,6 +82,22 @@ def test_claim_trichotomy(claims_config):
     assert "counter failed" in by_id["broken-counter"].message
 
 
+def test_line_count_matches_wc_l(tmp_path):
+    """line_count counts like `wc -l` for newline-terminated files (the
+    convention doc authors quote), and still counts a final unterminated line."""
+    from types import SimpleNamespace
+
+    from engine.claims import _count_lines
+
+    cfg = SimpleNamespace(repo_root=tmp_path)
+    (tmp_path / "term.txt").write_text("a\nb\nc\n", encoding="utf-8")      # wc -l = 3
+    (tmp_path / "noterm.txt").write_text("a\nb\nc", encoding="utf-8")      # 3 visible lines
+    (tmp_path / "empty.txt").write_text("", encoding="utf-8")
+    assert _count_lines(cfg, None, {"path": "term.txt"}) == 3
+    assert _count_lines(cfg, None, {"path": "noterm.txt"}) == 3
+    assert _count_lines(cfg, None, {"path": "empty.txt"}) == 0
+
+
 def test_unknown_counter_type_rejected(tmp_path):
     bad = tmp_path / "claims.yaml"
     bad.write_text(

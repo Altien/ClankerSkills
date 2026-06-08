@@ -31,6 +31,9 @@ _KIND_MAP = {
     "abstract_method_signature": "method",
     "public_field_definition": "field",
     "internal_module": "namespace",
+    # Python (tree-sitter-python)
+    "function_definition": "function",
+    "class_definition": "class",
 }
 
 _DECL_TYPES = tuple(
@@ -139,6 +142,24 @@ def _symbols_from_declaration(node, *, exported: bool) -> list[Symbol]:
                     symbol.children.append(
                         Symbol(member_name, "method", member.start_point[0], member.end_point[0])
                     )
+    elif body is not None and node_type == "class_definition":
+        # Python methods live as function_definitions inside the class block,
+        # possibly wrapped in a decorated_definition (@property, @app.get, …).
+        for member in body.children:
+            inner = member
+            if member.type == "decorated_definition":
+                inner = member.child_by_field_name("definition") or member
+            if inner is not None and inner.type == "function_definition":
+                member_name = _name_of(inner)
+                if member_name:
+                    symbol.children.append(
+                        Symbol(
+                            member_name,
+                            "method",
+                            member.start_point[0],   # span includes any decorators
+                            member.end_point[0],
+                        )
+                    )
     return [symbol]
 
 
@@ -152,6 +173,13 @@ def extract_symbols(root) -> list[Symbol]:
                         # span the whole export statement, not just the declaration
                         sym.start_line = child.start_point[0]
                         symbols.append(sym)
+        elif child.type == "decorated_definition":
+            # Python: a top-level def/class behind decorators (@app.get, …).
+            inner = child.child_by_field_name("definition")
+            if inner is not None and inner.type in _DECL_TYPES:
+                for sym in _symbols_from_declaration(inner, exported=False):
+                    sym.start_line = child.start_point[0]  # span includes decorators
+                    symbols.append(sym)
         elif child.type in _DECL_TYPES:
             symbols.extend(_symbols_from_declaration(child, exported=False))
 
