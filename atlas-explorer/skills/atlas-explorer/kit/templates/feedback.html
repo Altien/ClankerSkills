@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback — {{ site.title }}{% endblock %}
+
+{% block content %}
+<div class="home">
+  <h1 class="home-title">Feedback</h1>
+  <p class="home-subtitle">{{ open_count }} open · {{ total }} total — comments anchored to
+    docs and code, ready to hand to an agent.</p>
+
+  <form class="search-form" action="/feedback" method="get">
+    <select name="status">
+      <option value="">any status</option>
+      {% for s in statuses %}
+      <option value="{{ s }}" {% if s == filter_status %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <select name="type">
+      <option value="">any type</option>
+      {% for t in comment_types %}
+      <option value="{{ t }}" {% if t == filter_type %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+    <input type="text" name="doc" value="{{ filter_doc }}" placeholder="doc id filter…">
+    <button type="submit">Filter</button>
+    <button type="button" id="export-all" class="copy-brief"
+            title="Copy a bundle of every open comment (honoring filters)">⧉ Export all</button>
+  </form>
+  <script>
+    document.getElementById("export-all").addEventListener("click", function () {
+      var form = this.closest("form");
+      var params = new URLSearchParams({
+        status: form.status.value || "open",
+        type: form.type.value,
+        doc: form.doc.value
+      });
+      this.dataset.briefUrl = "/api/comments/bundle?" + params.toString();
+    }, true);
+  </script>
+
+  <ul class="feedback-list">
+    {% for comment in comments %}
+    {% include "partials/feedback_row.html" %}
+    {% else %}
+    <li class="comment-empty">Nothing here. Hover a heading in any doc and click 💬 to start.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

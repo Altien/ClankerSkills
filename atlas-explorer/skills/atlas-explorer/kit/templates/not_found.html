@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Not found — {{ site.title }}{% endblock %}
+
+{% block content %}
+<div class="home">
+  <h1 class="home-title">Document not found</h1>
+  <p class="home-subtitle">No corpus document with id <code>{{ missing_id }}</code>.</p>
+  <p><a href="/">Back to the atlas</a></p>
+</div>
+{% endblock %}

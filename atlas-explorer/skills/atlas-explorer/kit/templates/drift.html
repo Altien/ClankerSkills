@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Drift — {{ site.title }}{% endblock %}
+
+{% block content %}
+<div class="home">
+  <h1 class="home-title">Drift</h1>
+  <p class="home-subtitle">
+    Where the documentation and the tree disagree — every doc→code reference is
+    verified live at index time.
+    {% if report.unverifiable %}
+    <br><span class="drift-note">{{ report.unverifiable }} symbol mention(s) are in files
+    with no configured grammar and cannot be verified.</span>
+    {% endif %}
+    {% if report.exempted %}
+    <br><span class="drift-note">{{ report.exempted }} broken reference(s) in drift-exempt
+    docs (changelogs reference removed files by design).</span>
+    {% endif %}
+  </p>
+
+  {% if dangling_nodes %}
+  <h2 class="drift-section-title">Dangling diagram nodes</h2>
+  <ul class="drift-list">
+    {% for d in dangling_nodes %}
+    <li><code>{{ d.diagram_id }} · {{ d.node_id }}</code> ({{ d.label }}) — {{ d.reason }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if dangling_stops %}
+  <h2 class="drift-section-title">Dangling journey stops</h2>
+  <ul class="drift-list">
+    {% for d in dangling_stops %}
+    <li>
+      <a href="/journey/{{ d.journey_id }}/{{ d.stop_index + 1 }}">{{ d.journey_id }} · stop {{ d.stop_index + 1 }}</a>
+      (<code>{{ d.label }}</code>) — {{ d.reason }}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if uncurated %}
+  <h2 class="drift-section-title">Needs curation</h2>
+  <p class="drift-note">{{ uncurated | length }} full-depth doc(s) have no authored summary yet:</p>
+  <ul class="drift-list">
+    {% for doc_id in uncurated %}
+    <li><a href="/doc/{{ doc_id }}">{{ doc_id }}</a></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <h2 class="drift-section-title">Quantitative claims</h2>
+  {% if claims %}
+  <ul class="drift-list claims-list">
+    {% for result in claims %}
+    <li class="claim-{{ result.status }}">
+      <span class="hit-kind">{{ result.status }}</span>
+      <a href="{{ result.doc_url }}">{{ result.claim.doc }}</a>:
+      <em>“{{ result.claim.quote }}”</em> — {{ result.message }}
+      {% if result.actual is not none %}
+      <span class="claim-counts">claimed {{ result.claim.expected }} · actual {{ result.actual }}</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="drift-note">No curated claims yet (curated/claims.yaml).</p>
+  {% endif %}
+
+  <h2 class="drift-section-title">References</h2>
+  {% if report.count == 0 %}
+  <p class="drift-clean">✓ No drift detected. Every reference resolves.</p>
+  {% else %}
+  <p class="search-count">{{ report.count }} broken reference{{ "s" if report.count != 1 }}
+    across {{ report.by_doc() | length }} document{{ "s" if report.by_doc() | length != 1 }}.</p>
+
+  {% for doc_id, items in report.by_doc() %}
+  <section class="drift-group">
+    <h2><a href="/doc/{{ doc_id }}">{{ doc_id }}</a>
+      <span class="hit-kind">{{ items | length }}</span></h2>
+    <ul class="drift-list">
+      {% for item in items %}
+      <li>
+        <span class="hit-kind drift-{{ item.kind }}">{{ item.kind }}</span>
+        <code>{{ item.raw }}</code> — {{ item.detail }}
+        <a class="drift-jump" href="{{ item.doc_url }}">view in doc →</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

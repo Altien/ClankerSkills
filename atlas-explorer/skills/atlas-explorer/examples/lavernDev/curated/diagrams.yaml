@@ -1,0 +1,130 @@
+# Authored flow diagrams. Every node anchors to a real doc heading or code
+# symbol (verified at index time; dangling anchors surface on /drift) and
+# carries a hand-written one-line summary.
+
+- id: pipeline
+  title: "The 4-stage pipeline"
+  doc: docs/architecture-spec.md
+  nodes:
+    - id: request
+      type: start
+      label: "Engagement request"
+      summary: "Every engagement enters through one front door, whatever the channel."
+      doc: docs/architecture-spec.md
+      heading: purpose
+    - id: router
+      type: step
+      label: "Stage 1 — Router"
+      summary: "Classifies the request and selects the minimum viable pipeline — not every job gets the full bench."
+      doc: docs/architecture-spec.md
+      heading: stage-1-router
+    - id: specialists
+      type: step
+      label: "Stage 2 — Specialists"
+      summary: "The selected agents from the 7 functional areas do the substantive work, citing as they go."
+      doc: docs/architecture-spec.md
+      heading: stage-2-specialists
+    - id: evaluator
+      type: decision
+      label: "Stage 3 — Evaluator gate"
+      summary: "Every deliverable is judged on a different model than produced it — the guard against correlated errors."
+      doc: docs/architecture-spec.md
+      heading: 31-quality-audit-agent-the-evaluator-gate
+      loop_to: specialists
+      when: "fail → revise"
+    - id: output
+      type: output
+      label: "Stage 4 — Delivery"
+      summary: "Approved work ships with its audit trail; the architecture rules define what may never be skipped."
+      doc: docs/architecture-spec.md
+      heading: architecture-rules
+
+- id: managed-agents
+  title: "Managed Agents migration stages"
+  doc: docs/managed-agents-migration.md
+  nodes:
+    - id: preflight
+      type: start
+      label: "Pre-flight red-lines"
+      summary: "Gates, cost surfacing, and session resume verified before any stage may proceed."
+      doc: docs/managed-agents-migration.md
+      heading: pre-flight-red-line-check-complete
+    - id: stage0
+      type: step
+      label: "Stage 0 — Provider scaffold (landed)"
+      summary: "Types, client stub, and event mapper exist; the executor deliberately throws."
+      doc: docs/managed-agents-migration.md
+      heading: stage-0-provider-scaffolding-landed
+    - id: stage1
+      type: step
+      label: "Stage 1 — Remote MCP bridge (landed)"
+      summary: "Twelve Counsel tools exposed over JSON-RPC with shared-secret auth and Zod validation."
+      doc: docs/managed-agents-migration.md
+      heading: stage-1-remote-mcp-bridge-landed
+    - id: stage2
+      type: step
+      label: "Stage 2 — Counsel executor"
+      summary: "The first real workload: counsel sessions execute on Managed Agents end-to-end."
+      doc: docs/managed-agents-migration.md
+      heading: stage-2-counsel-executor
+    - id: stage34
+      type: step
+      label: "Stages 3–4 — Gates audit + routing flag"
+      summary: "Human gates re-verified under the new lane, then a feature flag routes traffic deliberately."
+      doc: docs/managed-agents-migration.md
+      heading: stage-3-gates-audit
+    - id: stage5
+      type: step
+      label: "Stage 5 — Observability"
+      summary: "Cost and latency surfaced per session before any percentage of real traffic moves."
+      doc: docs/managed-agents-migration.md
+      heading: stage-5-observability
+    - id: canary
+      type: decision
+      label: "Stage 6 — Canary rollout"
+      summary: "Counsel-only canary 1% → 100%, seven days per tier, with kill switches at every stage."
+      doc: docs/managed-agents-migration.md
+      heading: stage-6-canary-rollout-counsel-only
+      loop_to: stage5
+      when: "regression → halt"
+    - id: stage7
+      type: output
+      label: "Stage 7 — Multi-agent workflows"
+      summary: "The full bench moves over — gated entirely on preview access."
+      doc: docs/managed-agents-migration.md
+      heading: stage-7-multi-agent-workflows-gated-on-preview-access
+
+- id: lighthouse
+  title: "Clawern's lighthouse pipeline"
+  doc: CLAUDE.md
+  nodes:
+    - id: arrive
+      type: start
+      label: "Document arrives"
+      summary: "The watcher sees a new file: debounced, symlink-protected, hashed for dedup."
+      path: src/claw/watcher.ts
+      symbol: ClawWatcher
+    - id: watchman
+      type: step
+      label: "Watchman — track & dedup"
+      summary: "Content-hash registry decides whether this document is genuinely new work."
+      path: src/claw/registry.ts
+      symbol: DocumentRegistry
+    - id: reader
+      type: step
+      label: "Reader — parse & analyze"
+      summary: "Parse, infer type, dispatch analysis, look up precedents — the heart of processing."
+      path: src/claw/processor.ts
+      symbol: processDocument
+    - id: curator
+      type: step
+      label: "Curator — institutional memory"
+      summary: "Findings persist across documents with O(1) dedup, decay, and promotion to confirmed precedent."
+      path: src/claw/precedent-board.ts
+      symbol: PrecedentBoard
+    - id: deliver
+      type: output
+      label: "Delivery bundle"
+      summary: "Manifest, deliverable, and findings written out — the audit bundle ships with the work."
+      path: src/claw/delivery.ts
+      symbol: ClawDelivery

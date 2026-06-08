@@ -1,0 +1,81 @@
+# atlas.config.yaml — the ONLY place (with curated/) that may reference this repo.
+# Copy to <repo>/docs/atlas/atlas.config.yaml and adapt. Annotated skeleton;
+# see reference/METHOD.md for the full key surface and examples/lavernDev for a
+# real instance. Delete the guidance comments once you've filled it in.
+
+site:
+  title: "The Atlas"
+  subtitle: "<this repo>'s documentation, bound to its code"
+
+repo_root: ../..          # relative path from THIS file to the repo root
+port: 8400
+
+# Sidebar/home categories, in display order. ids are referenced by
+# category_rules below and by curated/atlas.yaml overviews.
+categories:
+  - { id: getting-started, title: "Getting Started" }
+  - { id: architecture,    title: "Architecture" }
+  - { id: guides,          title: "Guides" }
+  - { id: reference,       title: "Reference" }
+  # …add the categories this repo actually needs.
+
+# What to index. depth: full (curated + drift-checked) | search-only (FTS only,
+# no curation/drift). render: internal (rendered in-app) | external (linked out,
+# e.g. prebuilt HTML). Every include glob MUST match ≥1 file or startup fails.
+corpus:
+  - include:
+      - "*.md"
+      - "docs/**/*.md"
+    exclude:
+      - "docs/atlas/**"          # don't index the Atlas's own scaffolding
+    depth: full
+    render: internal
+  # Example: a large prompt/spec set you want searchable but not curated:
+  # - include: ["prompts/**/*.md"]
+  #   depth: search-only
+  #   render: internal
+  # Example: prebuilt HTML pages — text-extracted for search, opened standalone:
+  # - include: ["site/**/*.html"]
+  #   depth: search-only
+  #   render: external
+
+# Map each doc id to a category. First match wins. A doc matching no rule fails
+# startup (deliberate: no doc falls through the cracks). Order specific → general.
+category_rules:
+  - { match: "README.md",        category: getting-started }
+  - { match: "docs/adr/*",       category: architecture }
+  - { match: "docs/*",           category: guides }
+  - { match: "*",                category: reference }   # catch-all last
+
+# First path segments that may become clickable code chips. This allowlist is
+# what keeps prose like "and/or" or "TODO/FIXME" out of the drift report —
+# include only real source roots.
+code_references:
+  roots: [src, lib, pkg, tests, scripts]
+
+# Docs whose broken code references are expected, not drift (they reference
+# removed files by design). Changelogs and history files go here.
+drift_exempt:
+  - "CHANGELOG.md"
+
+# tree-sitter grammars per file extension, as "module:function". Needed only for
+# symbol slicing + fold regions (Pygments highlights everything regardless).
+# Add a language = pip install its grammar wheel + one entry here.
+languages:
+  - { extensions: [".ts"],  grammar: "tree_sitter_typescript:language_typescript" }
+  - { extensions: [".tsx"], grammar: "tree_sitter_typescript:language_tsx" }
+  # - { extensions: [".py"], grammar: "tree_sitter_python:language" }    # pip install tree-sitter-python
+  # - { extensions: [".go"], grammar: "tree_sitter_go:language" }        # pip install tree-sitter-go
+  # - { extensions: [".rs"], grammar: "tree_sitter_rust:language" }      # pip install tree-sitter-rust
+
+# Optional: deep-link certain docs into a sibling tool via its JSON manifest
+# (maps source_path -> id). Remove if there's no sibling explorer.
+# artifact_links:
+#   - match: "src/agents/prompts/*"
+#     title: "Open in the Skills & Prompts Explorer"
+#     url_template: "http://127.0.0.1:8848/docs/explorer/index.html#/a/{id}"
+#     manifest: "docs/explorer/explorer-manifest.json"
+
+# Storage (defaults are usually fine).
+db_path: data/atlas.db          # FTS index (disposable) + comments (durable)
+curated_dir: curated            # the authored YAML lives here

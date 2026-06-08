@@ -1,0 +1,300 @@
+# The Atlas curation layer — authored after reading each doc (never extracted).
+# categories: one overview per category id (atlas.config.yaml declares them).
+# docs: one entry per full-depth corpus doc: summary + "read this when…".
+
+categories:
+  getting-started: >-
+    The front door. What Lavern is, how to get it running in a minute, and the
+    personality it speaks with. Start here, in order: README → QUICKSTART → SOUL.
+  architecture-design: >-
+    Why the system is shaped this way: the 4-stage pipeline, the 25-role agent
+    taxonomy, and the complete codebase topology. The prescriptive specs predate
+    the code; CLAUDE.md tracks what was actually built.
+  integration: >-
+    Everything that touches the outside world: the three LLM providers, 21 MCP
+    tools, bundled legal datasets, external services — plus the two live
+    migration roadmaps (Anthropic Managed Agents, Azure).
+  audits-quality: >-
+    Point-in-time health reports: a tech-debt audit that found an unusually
+    clean codebase (and the CLAUDE.md drift this Atlas now checks continuously),
+    and the pre-launch security audit behind the fresh-start v0.15.0 repo.
+  evaluation: >-
+    The v1→v3.4 Lighthouse eval arc: seven reports on real CUAD JV contracts
+    running on a local gemma2:2b, each diagnosing a failure mode, fixing it, and
+    re-measuring — from "plumbing works" to zero leaks across every category.
+    RUBRIC.md is the pre-registered baseline; read the arc in order.
+  operations: >-
+    Running and showing the thing: importing the five legal datasets, the demo
+    walkthrough script, the macOS menu bar companion, sample documents, and the
+    bundled legal template library.
+  governance: >-
+    How the project is run: contribution rules built around "every agent must be
+    challengeable", the security policy and trust boundaries, attribution, the
+    code of conduct, and the release history.
+  developer-tools: >-
+    The documentation tools themselves: the Skills & Prompts Explorer (87
+    artifacts, curated diagrams) and this Atlas. Both follow the same pattern —
+    mechanical discovery strictly separated from authored curation.
+  agents-prompts: >-
+    All 67 agent prompts, searchable here at full text. For the curated
+    experience — assessment cards, workflow diagrams, click-to-source — each
+    page deep-links into the Explorer.
+  marketing-site: >-
+    The public lavern.ai pages (dark cinematic single-file HTML). Indexed for
+    search; they open as standalone pages, not inside the Atlas.
+
+docs:
+  README.md:
+    summary: >-
+      The 60-second pitch and honest framing: a multi-agent legal system with 67
+      agents, 21 MCP tools, 9 workflows, debate protocol, three-layer
+      verification and human gates — explicitly "not a product, but ten things
+      that could each be one." Covers the three run modes (dashboard, CLI,
+      Clawern) and the three providers (Anthropic, Mistral, Ollama).
+    read_when: "Your very first stop in this repository."
+  QUICKSTART.md:
+    summary: >-
+      Clone → npm run setup → pick a provider → run. Walks the first engagement
+      end-to-end for server and dashboard flows, with a who-are-you routing
+      table and troubleshooting for the usual suspects (better-sqlite3 rebuilds,
+      Ollama, ports).
+    read_when: "You want it running on your machine in the next five minutes."
+  SOUL.md:
+    summary: >-
+      One screenful defining the firm's default personality — voice, principles,
+      style, values. Plain language first, legal effect sacred, debate over
+      polish. Used by CLI and Clawern; dashboard users override it in My Page.
+    read_when: "You're tuning agent tone or customizing the firm personality."
+  CLAUDE.md:
+    summary: >-
+      The complete codebase topology as AI-assistant context: system identity,
+      shared principles, non-negotiable preservation categories, and a
+      directory-by-directory map of the engine, workflows, API, dashboard,
+      providers, and Clawern's 28 modules. The Atlas drift page checks its
+      quantitative claims continuously.
+    read_when: "You need to know where anything lives in the codebase."
+  CONNECTORS.md:
+    summary: >-
+      The authoritative index of everything external: three LLM providers, all
+      21 MCP tools with file references, the remote MCP bridge, five bundled
+      legal datasets (with licensing caveats — ContractNLI deliberately
+      excluded), and nine external services.
+    read_when: "You're integrating with, operating, or extending the system's edges."
+  CONTRIBUTING.md:
+    summary: >-
+      Contribution rules anchored to one design principle: every agent must be
+      challengeable — findings cite or don't ship. Branch/test workflow, code
+      standards, recipes for adding agents, MCP tools and workflows, and the
+      non-negotiable rules (gates can't be skipped, thresholds are fixed).
+    read_when: "Before your first PR, or when adding an agent or tool."
+  SECURITY.md:
+    summary: >-
+      Vulnerability reporting (48h ack / 7d updates), explicit scope and trust
+      boundaries, what LOCAL MODE does and doesn't protect, ten implemented
+      defenses (SSRF prevention, SMAC-L1 sanitization, rate limiting…) and the
+      hardening roadmap.
+    read_when: "You're reporting a vulnerability or assessing the threat model."
+  AUTHORS.md:
+    summary: >-
+      Maintainer and contributors, including an explicit acknowledgment of
+      substantial AI (Claude) co-authorship across the private development
+      history.
+    read_when: "Provenance or attribution questions."
+  CODE_OF_CONDUCT.md:
+    summary: >-
+      Contributor Covenant v2.1, lightly adapted. Standard pledge, standards,
+      and enforcement contacts.
+    read_when: "Community conduct expectations."
+  CHANGELOG.md:
+    summary: >-
+      Release history v0.8.0 → v0.15.0 (the Apache 2.0 open-source launch),
+      with unusually candid rationale per decision — why model upgrades were
+      rolled back, why deps were bumped, what each hardening pass fixed. Search
+      hits land on the exact version section.
+    read_when: "Upgrade planning, or archaeology on why something changed."
+  docs/architecture-spec.md:
+    summary: >-
+      The prescriptive blueprint: a 4-stage pipeline (Router → Specialists →
+      Evaluator Gate → Output), 25 agent roles across 7 functional areas, debate
+      and swarm patterns, and the thesis that legal work is commoditized — the
+      wrapper (insurance, trust, quality, design) is the value. Note the rule
+      that the Evaluator must run on a different model than the specialist.
+    read_when: "You want the why behind the agent org chart and routing."
+  docs/agent-roles-spec.md:
+    summary: >-
+      The same 25-role taxonomy as architecture-spec, restated agent-by-agent
+      (what each does, inputs, outputs, escalation triggers) without the
+      pipeline framing. Reference-table form.
+    read_when: "You need the agent taxonomy without the pipeline narrative."
+  docs/TECH_DEBT_AUDIT.md:
+    summary: >-
+      A 2026-05-11 audit of ~160K LOC concluding the codebase is unusually
+      healthy: zero TODO/FIXME, zero @ts-ignore in src/. Real findings: 8 npm
+      advisories, test-coverage gaps by module, and the CLAUDE.md count drift
+      that this Atlas now verifies on every index.
+    read_when: "Planning refactors or verifying code health claims."
+  docs/DEMO-SCRIPT.md:
+    summary: >-
+      The 8–10 minute demo narration in cinematic acts: door → lobby → intake →
+      briefing → strategy → team → the work → delivery → billing → agent door.
+      Confident voice, show-don't-tell.
+    read_when: "You're presenting Lavern or cutting a demo video."
+  docs/managed-agents-migration.md:
+    summary: >-
+      The staged plan (0–7) for adopting Anthropic Managed Agents: provider
+      scaffold and the 12-tool remote MCP bridge are done; the counsel executor
+      is next; multi-agent stages wait on preview access. Includes red-line
+      checks, canary rollout, and an explicit no-silent-fallback policy.
+    read_when: "Tracking or evaluating the Managed Agents migration."
+  docs/azure-migration.md:
+    summary: >-
+      A research-grade Azure design: Container Apps (api/worker/jobs), Postgres
+      with pgvector for the KB, Blob for user content only (agents stay
+      code-resident), Service Bus + Event Grid, Entra ID — with decision
+      rationale per service and a ~$810–1,075/mo cost shape. Clawern stays
+      local.
+    read_when: "Planning the cloud deployment or challenging a service choice."
+  docs/importing-datasets.md:
+    summary: >-
+      How to seed the knowledge base with the five bundled datasets (CUAD,
+      MAUD, ACORD, UNFAIR-ToS, LEDGAR) via one idempotent script — plus the
+      sharpest licensing discussion in the repo: what CC BY-SA actually
+      obligates, and why ContractNLI is excluded.
+    read_when: "Bootstrapping a KB or checking dataset license obligations."
+  docs/SECURITY_AUDIT_2026-05-13.md:
+    summary: >-
+      The pre-launch audit: gitleaks across full history, license/attribution
+      review, identity hygiene — and the rationale for shipping a fresh-start
+      repo at v0.15.0 rather than rewriting history. Honest about the revoked
+      PAT and residual image-rights risk.
+    read_when: "Due diligence before relying on or deploying the project."
+  docs/explorer/README.md:
+    summary: >-
+      The Skills & Prompts Explorer: a zero-dependency static SPA over all 67
+      agent prompts plus embedded system prompts, built from a generated
+      manifest plus hand-authored assessment cards and workflow diagrams, with
+      click-to-source section slicing and a structural verifier.
+    read_when: "Browsing the agent catalog or maintaining the explorer."
+  docs/explorer/METHOD.md:
+    summary: >-
+      The reusable recipe for porting the Explorer to any repo: detect
+      conventions, discover exhaustively, author (never extract) assessments
+      and diagrams, verify graph integrity. The quality bar — every curated
+      node needs a real source anchor and a hand-written summary — is enforced
+      by the verifier. The Atlas follows the same philosophy.
+    read_when: "Porting the explorer pattern, or setting curation standards."
+  docs/atlas/DESIGN.md:
+    summary: >-
+      The approved design for this Atlas: FastAPI + Jinja/htmx, tree-sitter
+      slicing, FTS5 search, drift detection with curated claims, anchored
+      commenting with clipboard agent briefs, and a config-driven engine that
+      never references this repo by name.
+    read_when: "Working on the Atlas itself, or porting it to another repo."
+  evals/jv/RUBRIC.md:
+    summary: >-
+      The pre-registered eval rubric: three JV contracts with 12/10/7 expected
+      risks each, Watchman expectations, JV vocabulary the Reader should fire,
+      and the named watches (precedent compounding, hallucination rate on
+      gemma2:2b). Pre-registration is the bias control for a self-graded eval.
+    read_when: "Before reading any eval report — this is the yardstick."
+  evals/jv/EVAL_REPORT.md:
+    summary: >-
+      v1 baseline: Watchman routes all 3 docs correctly, but the chunker
+      silently collapses CUAD's inline-numbered clauses into one chunk,
+      throttling recall to 2/12, and synthesis hallucinates the client profile
+      into summaries. Verdict: plumbing works, output not ship-ready.
+    read_when: "Start of the eval arc — the honest baseline."
+  evals/jv/EVAL_REPORT_V2.md:
+    summary: >-
+      Three fixes in: chunker inline fallback (1 → 28 chunks on doc 1),
+      profile-as-stance synthesis, precedent OR-matching. Cross-doc precedent
+      reuse starts working; profile leak drops to 2/3 with a new
+      bracketed-placeholder regression on doc 1.
+    read_when: "Second stop in the arc — first fixes validated."
+  evals/jv/EVAL_REPORT_V3.md:
+    summary: >-
+      Scale-up to 10 CUAD contracts: jurisdiction leak 0/10, placeholders 0/10,
+      precedents promoted to confirmed, Curator output becomes named-doc +
+      named-pattern + actionable. Remaining: 5/10 docs hallucinate memorized
+      party names — a model-ceiling problem, not architecture.
+    read_when: "The arc's turning point — architecture vindicated at scale."
+  evals/jv/EVAL_REPORT_V31.md:
+    summary: >-
+      Prompt-only iteration: removing real-party examples cuts profile leak to
+      1/10 but memorized-party hallucination stays at 5/10 — proving prompt
+      engineering can't beat training-data memorization. Defines the three
+      paths forward (A: programmatic extraction, B: bigger model, C:
+      template-fill).
+    read_when: "Understanding why Path A (v3.2) was chosen."
+  evals/jv/EVAL_REPORT_V32.md:
+    summary: >-
+      Path A lands: extractPartyNames() builds a closed vocabulary from
+      findings and validateSummaryNames() enforces it — memorized hallucination
+      0/10, profile leak 0/10. New cost: the extractor regex is too loose and
+      pulls artifacts ("Capital Co", "AZ") into 4/10 summaries.
+    read_when: "How the closed-vocabulary fix works and what it traded."
+  evals/jv/EVAL_REPORT_V33.md:
+    summary: >-
+      Four regex-tightening passes (corporate-suffix boundaries, 50-state
+      stoplist, frequency thresholds) drive extraction artifacts to 0/10 and
+      produce the cleanest run yet — exposing one last leak vector: the client
+      name appearing in risk framing.
+    read_when: "The polish iteration before the final fix."
+  evals/jv/EVAL_REPORT_V34.md:
+    summary: >-
+      Arc closure: the synthesis prompt drops the client name field entirely
+      and a defensive post-process strips stragglers — 0/10 in every leak
+      category for the first time, 7/10 strictly clean grounded summaries, and
+      a full v1→v3.4 summary table. All seven runs reproducible at $0 on local
+      hardware.
+    read_when: "The end of the arc — and the state the evals shipped in."
+  src/providers/managed-agents/README.md:
+    summary: >-
+      Stage-0 scaffolding for the Managed Agents provider: typed SSE envelopes,
+      an HTTP client stub, an event mapper, and an executor that deliberately
+      throws — plus the three kill switches that gate every stage of the
+      migration.
+    read_when: "Cross-referencing the migration plan against actual code state."
+  menubar/README.md:
+    summary: >-
+      The native macOS status-bar companion for Clawern: budget gauge in the
+      icon, popover with document counts and daemon status, 30-second API
+      polling. swift build and go.
+    read_when: "You're on macOS and want ambient Clawern monitoring."
+  samples/README.md:
+    summary: >-
+      Fabricated public-domain sample documents (currently one SaaS ToS with
+      deliberately review-worthy clauses) plus the exact CLI and dashboard
+      commands to try them.
+    read_when: "You want to try Lavern without supplying your own contract."
+  src/templates/docs/consulting-agreement.md:
+    summary: >-
+      Bundled independent-contractor consulting agreement template: scope,
+      deliverables, payment, IP assignment, limitation of liability. Part of
+      the assembly template library, not documentation.
+    read_when: "Using or extending the document template library."
+  src/templates/docs/nda-mutual.md:
+    summary: >-
+      Mutual NDA template: definitions of confidential information, standard
+      exceptions, term, remedies. Symmetric obligations between parties.
+    read_when: "Using or extending the document template library."
+  src/templates/docs/nda-one-way.md:
+    summary: >-
+      One-way NDA template — same skeleton as the mutual NDA with asymmetric
+      discloser/recipient obligations.
+    read_when: "Using or extending the document template library."
+  src/templates/docs/privacy-policy.md:
+    summary: >-
+      Privacy policy template: collection, usage, retention, and GDPR/CCPA
+      sections ready for adaptation.
+    read_when: "Using or extending the document template library."
+  src/templates/docs/saas-agreement.md:
+    summary: >-
+      SaaS subscription agreement template: service terms, payment, limitation
+      of liability, indemnification.
+    read_when: "Using or extending the document template library."
+  src/templates/docs/terms-of-service.md:
+    summary: >-
+      Terms of service template: usage terms, liability, dispute resolution,
+      governing law.
+    read_when: "Using or extending the document template library."

@@ -1,0 +1,42 @@
+# Quantitative documentation claims, checked deterministically on every index.
+# Seeded from TECH_DEBT_AUDIT.md's known CLAUDE.md drift; counters re-verified
+# against the tree on 2026-06-04. `expected` is what the DOC says — a fail
+# means the doc has drifted from the tree.
+
+- id: claude-md-route-modules
+  doc: CLAUDE.md
+  quote: "26 route modules"
+  counter: { type: file_count, glob: "src/api/routes/*.ts" }
+  expected: 26
+  note: "TECH_DEBT_AUDIT flagged this drifting 20→27; corrected to the tree's 26 when the Atlas landed."
+
+- id: claude-md-mcp-tools
+  doc: CLAUDE.md
+  quote: "21 MCP tool modules"
+  counter: { type: file_count, glob: "src/mcp/tools/*.ts" }
+  expected: 21
+
+- id: claude-md-claw-modules
+  doc: CLAUDE.md
+  quote: "28 modules"
+  counter: { type: file_count, glob: "src/claw/*.ts" }
+  expected: 28
+
+- id: claude-md-agent-prompts
+  doc: CLAUDE.md
+  quote: "67 agent prompts"
+  counter: { type: file_count, glob: "src/agents/prompts/*" }
+  expected: 67
+
+- id: claude-md-workflow-templates
+  doc: CLAUDE.md
+  quote: "9 workflow templates"
+  counter: { type: file_count, glob: "src/workflows/templates/*.ts" }
+  expected: 9
+
+- id: claude-md-test-files
+  doc: CLAUDE.md
+  quote: "1,677 tests across 105 files"
+  counter: { type: file_count, glob: "tests/**/*.test.ts" }
+  expected: 105
+  note: "Counts test FILES (the test total itself is not statically countable). Corrected from 109 when the Atlas landed; README already said 105."

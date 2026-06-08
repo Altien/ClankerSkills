@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Search — {{ site.title }}{% endblock %}
+
+{% block content %}
+<div class="home">
+  <h1 class="home-title">Search</h1>
+
+  <form class="search-form" action="/search" method="get">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search docs, headings, symbols…"
+           autofocus autocomplete="off">
+    <select name="scope">
+      <option value="all"    {% if scope == "all" %}selected{% endif %}>Everything</option>
+      <option value="docs"   {% if scope == "docs" %}selected{% endif %}>Docs</option>
+      <option value="code"   {% if scope == "code" %}selected{% endif %}>Code symbols</option>
+      <option value="claims" {% if scope == "claims" %}selected{% endif %}>Claims</option>
+    </select>
+    <button type="submit">Search</button>
+  </form>
+
+  {% if q %}
+  <p class="search-count">{{ hits | length }} result{{ "s" if hits | length != 1 }} for
+    <strong>{{ q }}</strong></p>
+  <ol class="search-results">
+    {% for hit in hits %}
+    <li class="search-hit">
+      <a class="hit-link" href="{{ hit.url }}">
+        <span class="hit-title">{{ hit.title }}</span>
+        {% if hit.heading %}<span class="hit-heading">› {{ hit.heading }}</span>{% endif %}
+        <span class="hit-kind">{{ hit.kind }}</span>
+      </a>
+      <p class="hit-snippet">{{ hit.snippet | safe }}</p>
+    </li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+</div>
+{% endblock %}

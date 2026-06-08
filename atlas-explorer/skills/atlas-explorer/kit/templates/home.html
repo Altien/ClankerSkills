@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="home">
+  <h1 class="home-title">{{ site.title }}</h1>
+  {% if site.subtitle %}<p class="home-subtitle">{{ site.subtitle }}</p>{% endif %}
+
+  {% if journeys %}
+  <section class="journeys-home">
+    <h2 class="drift-section-title">Journeys</h2>
+    <div class="journey-cards">
+      {% for j in journeys %}
+      <a class="journey-card" href="/journey/{{ j.id }}">
+        <h3>{{ j.title }}</h3>
+        <p>{{ j.intro }}</p>
+        <span class="journey-count">{{ j.stops | length }} stops →</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <div class="category-grid">
+    {% for category, docs in grouped %}
+    <section class="category-card">
+      <h2>{{ category.title }}</h2>
+      {% set overview = curated.category_overviews.get(category.id) %}
+      {% if overview %}<p class="category-overview">{{ overview }}</p>{% endif %}
+      <ul class="category-doc-list">
+        {% for d in docs %}
+        {% set curation = curated.for_doc(d.id) %}
+        <li>
+          <a href="/doc/{{ d.id }}" {% if curation %}title="{{ curation.summary }}"{% endif %}>{{ d.title }}</a>
+          {% if curation and curation.read_when %}
+          <span class="read-when">{{ curation.read_when }}</span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

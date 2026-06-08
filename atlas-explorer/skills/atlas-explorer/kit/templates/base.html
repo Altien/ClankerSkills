@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site.title }}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/pygments.css">
+  <script src="/static/htmx.min.js" defer></script>
+  <script>
+    // Apply persisted theme before first paint to avoid a flash.
+    (function () {
+      var theme = null;
+      try { theme = localStorage.getItem("atlas-theme"); } catch (e) {}
+      if (theme === "dark" || theme === "light") {
+        document.documentElement.dataset.theme = theme;
+      }
+    })();
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-title">{{ site.title }}</span>
+      {% if site.subtitle %}<span class="brand-subtitle">{{ site.subtitle }}</span>{% endif %}
+    </a>
+    <div class="topbar-search">
+      <input id="global-search" type="search" placeholder="Search…  ( / )" autocomplete="off"
+             name="q"
+             hx-get="/partial/search" hx-trigger="keyup changed delay:250ms"
+             hx-target="#search-dropdown" hx-swap="innerHTML">
+      <div id="search-dropdown"></div>
+    </div>
+    <div class="topbar-actions">
+      <span id="reindex-status" class="doc-count">{{ doc_count }} documents</span>
+      <button id="reindex-btn" type="button" title="Rescan docs and code"
+              hx-post="/api/reindex" hx-target="#reindex-status" hx-swap="innerHTML"
+              hx-indicator="#reindex-btn">⟳</button>
+      <button id="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" aria-label="Documentation tree">
+      <div class="sidebar-links">
+        <a href="/">Atlas</a>
+        <a href="/search">Search</a>
+        <a href="/drift">Drift</a>
+        <a href="/feedback">Feedback</a>
+      </div>
+      {% for category, docs in grouped %}
+      {% set has_active = active_id and (docs | selectattr("id", "equalto", active_id) | list) %}
+      <details class="nav-group" {% if docs | length <= 20 or has_active %}open{% endif %}>
+        <summary class="nav-group-title">{{ category.title }}
+          <span class="nav-count">{{ docs | length }}</span></summary>
+        <ul>
+          {% for d in docs %}
+          <li>
+            {% set curation = curated.for_doc(d.id) if curated else none %}
+            <a href="/doc/{{ d.id }}"
+               class="nav-doc{% if d.id == active_id %} active{% endif %}"
+               title="{{ curation.summary if curation else d.id }}">{{ d.title }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </details>
+      {% endfor %}
+    </nav>
+
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script>
+    // "/" focuses search; Enter goes to the full results page; Esc dismisses.
+    var searchBox = document.getElementById("global-search");
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "/" && document.activeElement !== searchBox &&
+          !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) {
+        e.preventDefault();
+        searchBox.focus();
+      }
+    });
+    searchBox.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && searchBox.value.trim()) {
+        window.location = "/search?q=" + encodeURIComponent(searchBox.value.trim());
+      } else if (e.key === "Escape") {
+        document.getElementById("search-dropdown").innerHTML = "";
+        searchBox.blur();
+      }
+    });
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".topbar-search")) {
+        document.getElementById("search-dropdown").innerHTML = "";
+      }
+    });
+
+    // Copy agent briefs to the clipboard (delegated — works in htmx swaps too).
+    document.body.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-brief-url]");
+      if (!btn || !btn.dataset.briefUrl) return;
+      fetch(btn.dataset.briefUrl)
+        .then(function (r) { return r.text(); })
+        .then(function (text) {
+          return navigator.clipboard.writeText(text).then(function () {
+            var original = btn.textContent;
+            btn.textContent = "✓ copied";
+            setTimeout(function () { btn.textContent = original; }, 1600);
+          }).catch(function () {
+            // clipboard unavailable: show the brief in a copyable overlay
+            var ta = document.createElement("textarea");
+            ta.className = "brief-fallback";
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            ta.addEventListener("blur", function () { ta.remove(); });
+          });
+        });
+    });
+
+    document.getElementById("theme-toggle").addEventListener("click", function () {
+      var root = document.documentElement;
+      var next = root.dataset.theme === "dark" ? "light" : "dark";
+      root.dataset.theme = next;
+      try { localStorage.setItem("atlas-theme", next); } catch (e) {}
+    });
+
+    // Open the 50/50 split whenever the code panel receives content,
+    // and scroll the panel to the jump-target symbol when there is one.
+    document.body.addEventListener("htmx:afterSwap", function (evt) {
+      if (evt.target && evt.target.id === "code-panel") {
+        document.body.classList.toggle("panel-open", evt.target.innerHTML.trim() !== "");
+        var target = evt.target.querySelector(".hl-target");
+        if (target) {
+          target.scrollIntoView({ block: "center" });
+        } else {
+          evt.target.scrollTop = 0;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

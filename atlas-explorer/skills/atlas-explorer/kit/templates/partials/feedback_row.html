@@ -1,0 +1,33 @@
+<li class="feedback-row {{ comment.status }}{% if comment.orphaned %} orphaned{% endif %}" id="fb-{{ comment.id }}">
+  <div class="feedback-head">
+    <span class="comment-type">{{ comment.type }}</span>
+    <a class="feedback-anchor" href="{{ comment.anchor_url }}">{{ comment.anchor_label }}</a>
+    {% if comment.orphaned %}
+    <span class="comment-orphan" title="The anchor no longer resolves against the index">orphaned</span>
+    {% endif %}
+    <span class="comment-date">{{ comment.created_at[:16].replace("T", " ") }}</span>
+  </div>
+  {% if comment.quote %}<blockquote class="comment-quote">{{ comment.quote }}</blockquote>{% endif %}
+  <p class="comment-body">{{ comment.body }}</p>
+  {% if comment.resolution_note %}
+  <p class="comment-resolution">↳ {{ comment.resolution_note }}</p>
+  {% endif %}
+  <form class="feedback-actions"
+        hx-post="/api/comments/{{ comment.id }}/status"
+        hx-target="#fb-{{ comment.id }}" hx-swap="outerHTML">
+    <select name="status">
+      {% for s in statuses %}
+      <option value="{{ s }}" {% if s == comment.status %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <input type="text" name="resolution_note" placeholder="resolution note…"
+           value="{{ comment.resolution_note or '' }}">
+    <button type="submit">Update</button>
+    <button type="button" class="copy-brief" data-brief-url="/api/comments/{{ comment.id }}/brief"
+            title="Copy agent brief to clipboard">⧉ Copy</button>
+    <button type="button" class="feedback-delete"
+            hx-post="/api/comments/{{ comment.id }}/delete"
+            hx-target="#fb-{{ comment.id }}" hx-swap="outerHTML"
+            hx-confirm="Delete this comment?">Delete</button>
+  </form>
+</li>
