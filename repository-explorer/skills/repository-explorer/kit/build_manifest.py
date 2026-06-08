@@ -191,7 +191,7 @@ def build() -> dict:
             "size": path.stat().st_size,
             "lines": len(lines),
             "category": categorize(rel),
-            "type": "markdown" if is_markdown else path.suffix.lstrip("."),
+            "type": "markdown" if is_markdown else (path.suffix.lstrip(".") or path.name.lower()),
         })
 
     files.sort(key=lambda f: f["path"])
