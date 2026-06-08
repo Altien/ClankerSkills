@@ -60,12 +60,27 @@ except Exception:  # pragma: no cover - tolerant fallback
 SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "__pycache__", "dist",
              "build", ".next", ".cache", "vendor", "target", "docs/explorer"}
 
-# ── ADAPT (1): source files that contain named prompt literals/builders. ──────
-# Leave empty to skip embedded-prompt discovery, or list repo-relative paths.
+# ── ADAPT (1): embedded-prompt scanning. ─────────────────────────────────────
+# By DEFAULT the scanner auto-walks source files (SCAN_EXTS) for in-code prompts —
+# named template-literal / triple-quoted constants, prompt builder functions,
+# PromptTemplate / from_template / from_messages calls, and inline role:"system"
+# content. Set EMBEDDED_FILES to a non-empty list to scan ONLY those files
+# instead (narrower, no walk). Set EMBEDDED_SCAN = False to disable entirely.
+EMBEDDED_SCAN = True
 EMBEDDED_FILES: list[str] = [
     # "src/agents/system-prompt.ts",
     # "scripts/orchestrate.py",
 ]
+# Source extensions auto-walked when EMBEDDED_FILES is empty.
+SCAN_EXTS = (".py", ".ts", ".tsx", ".js", ".jsx", ".mjs")
+# Skip generated/minified/test files during the auto-walk (still scanned if you
+# name them explicitly in EMBEDDED_FILES).
+SCAN_SKIP_RE = re.compile(r"\.(min|bundle)\.js$|\.d\.ts$|\.(test|spec)\.[jt]sx?$")
+# Structural matches (builders, from_template, role:system) with no prompt-y
+# name must have a body at least this long to count — cuts false positives.
+EMBEDDED_MIN_BODY = 40
+# Even a prompt-y NAMED literal must clear this short floor (drops `x = "hi"`).
+NAMED_MIN_BODY = 16
 
 
 # ── Generic helpers (reuse as-is) ─────────────────────────────────────────────
@@ -344,11 +359,58 @@ def discover_prompt_files():
     return out
 
 
-# ── Embedded prompts in code (over EMBEDDED_FILES) ────────────────────────────
-CONST_PROMPT_RE = re.compile(
-    r"(?:export\s+)?const\s+([A-Za-z_][A-Za-z0-9_]*(?:_PROMPT|Prompt|_TEMPLATE|Template)[A-Za-z0-9_]*)\s*=\s*`")
-PY_PROMPT_RE = re.compile(
-    r'^([A-Z][A-Z0-9_]*(?:_PROMPT|_TEMPLATE))\s*[:=]', re.MULTILINE)
+# ── Embedded prompts in code (auto-scans source by default) ───────────────────
+# A "prompt-y" identifier: contains prompt / template / instruction / system /
+# persona / preamble. Used to accept a literal on its NAME alone (no length gate).
+PROMPTY_NAME_RE = re.compile(
+    r"(?i)(prompt|template|instruction|persona|preamble|sys[_-]?msg|system[_-]?message)")
+# JS/TS: const NAME = `…`   (also `let`/`var`, optional `export`)
+JS_CONST_RE = re.compile(
+    r"(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*`")
+# JS/TS: export function buildXxxPrompt(...) { … }
+JS_BUILDER_RE = re.compile(r"(?:export\s+)?function\s+(build[A-Za-z0-9_]*Prompt)\s*\(")
+# Python: NAME = (r/f/rf)? '''…''' | """…"""   (top-level or indented)
+PY_TRIPLE_RE = re.compile(
+    r'^([ \t]*)([A-Za-z_][\w]*)\s*=\s*(?:[rRfFuUbB]{1,2})?("""|\'\'\')', re.MULTILINE)
+# LangChain-style builders: PromptTemplate( | *.from_template( | *.from_messages(
+PY_BUILDER_RE = re.compile(
+    r"(?:(\w+)\s*=\s*)?(?:[\w.]*Prompt(?:Template)?|\w*\.from_template|\w*\.from_messages)\s*\(")
+# Inline chat messages: role:"system"  /  ("system", "…")
+ROLE_SYSTEM_RE = re.compile(r"""['"]?role['"]?\s*[:=]\s*['"]system['"]|\(\s*['"]system['"]\s*,""")
+
+
+def _read_string_literal(text: str, i: int):
+    """From the next quote at/after i, return (body, end_index) for a JS/Python
+    string literal: backtick, triple-quote, or single/double quote. None if none."""
+    n = len(text)
+    while i < n and text[i] not in "`\"'":
+        if text[i] == ")" or text[i] == "\n" and text[i - 1:i] == "\n":
+            pass
+        i += 1
+        if i - 0 > n:
+            return None
+    if i >= n:
+        return None
+    q = text[i]
+    if q == "`":
+        body, end = _template_body(text, i)
+        return body, end
+    if text[i:i + 3] in ('"""', "'''"):
+        triple = text[i:i + 3]
+        end = text.find(triple, i + 3)
+        end = end if end != -1 else n
+        return text[i + 3:end], end + 2
+    j = i + 1
+    while j < n:
+        if text[j] == "\\":
+            j += 2
+            continue
+        if text[j] == q:
+            return text[i + 1:j], j
+        if text[j] == "\n":
+            break
+        j += 1
+    return text[i + 1:j], j
 
 
 def _template_body(text: str, start: int):
@@ -364,56 +426,122 @@ def _template_body(text: str, start: int):
 
 
 def humanize(name: str) -> str:
+    if not name:
+        return "Embedded prompt"
     if "_" in name:
         return name.replace("_", " ").title()
     words = re.findall(r"[A-Z]?[a-z0-9]+|[A-Z]+(?![a-z])", name)
-    return " ".join(w.capitalize() for w in words)
+    return " ".join(w.capitalize() for w in words) or name
+
+
+def _embedded_targets():
+    """The files to scan: EMBEDDED_FILES verbatim if set, else an auto-walk of
+    SCAN_EXTS. Returns (relpaths, scanned_mode_str)."""
+    if EMBEDDED_FILES:
+        return [p for p in EMBEDDED_FILES
+                if os.path.exists(os.path.join(REPO, p))], "explicit list"
+    rels = []
+    for path in walk_files():
+        rp = rel(path)
+        if rp.endswith(SCAN_EXTS) and not SCAN_SKIP_RE.search(rp):
+            rels.append(rp)
+    return rels, "auto-walk"
 
 
 def discover_embedded():
-    out = []
-    for relpath in EMBEDDED_FILES:
+    out, seen = [], set()
+    if not EMBEDDED_SCAN:
+        return out, 0
+    targets, _mode = _embedded_targets()
+
+    def emit(name, relpath, start_line, end_line, body, kind, fmt):
+        if name and len(name) <= 2:      # 1–2 char vars (p, x) → treat as unnamed
+            name = ""
+        slug = slugify(name) if name else (slugify(relpath) + "-l" + str(start_line))
+        aid = "embedded-" + slug
+        if aid in seen:
+            aid = aid + "-l" + str(start_line)
+            if aid in seen:
+                return
+        seen.add(aid)
+        out.append({
+            "id": aid,
+            "title": humanize(name) or (os.path.basename(relpath) + f" :{start_line}"),
+            "kind": kind,
+            "category": "embedded prompts",
+            "source_path": relpath,
+            "line_start": start_line,
+            "line_end": max(end_line, start_line),
+            "format": fmt,
+            "description": first_sentence(re.sub(r"\s+", " ", body)[:400]) if body else "",
+            "headings": extract_headings(body) if body else [],
+            "body_chars": len(body or ""),
+            "embedded": True,
+        })
+
+    for relpath in targets:
         path = os.path.join(REPO, relpath)
-        if not os.path.exists(path):
+        try:
+            text = read(path)
+        except Exception:
             continue
-        text = read(path)
-        # JS/TS template-literal prompts
-        for m in CONST_PROMPT_RE.finditer(text):
-            name = m.group(1)
-            tick = text.index("`", m.end() - 1)
-            body, end_idx = _template_body(text, tick)
-            out.append({
-                "id": "embedded-" + slugify(name),
-                "title": humanize(name),
-                "kind": "system-prompt",
-                "category": "embedded prompts",
-                "source_path": relpath,
-                "line_start": line_of(text, m.start()),
-                "line_end": line_of(text, end_idx),
-                "format": "embedded literal (template)",
-                "description": "",
-                "headings": extract_headings(body),
-                "body_chars": len(body),
-                "embedded": True,
-            })
-        # Python prompt constants (assigned a string/triple-quoted block)
-        for m in PY_PROMPT_RE.finditer(text):
-            name = m.group(1)
-            out.append({
-                "id": "embedded-" + slugify(name),
-                "title": humanize(name),
-                "kind": "system-prompt",
-                "category": "embedded prompts",
-                "source_path": relpath,
-                "line_start": line_of(text, m.start()),
-                "line_end": line_of(text, m.start()),  # ADAPT: widen to the literal's end
-                "format": "embedded literal (python)",
-                "description": "",
-                "headings": [],
-                "body_chars": 0,
-                "embedded": True,
-            })
-    return out
+        is_py = relpath.endswith(".py")
+
+        if not is_py:
+            # JS/TS: named template-literal consts
+            for m in JS_CONST_RE.finditer(text):
+                name = m.group(1)
+                if not PROMPTY_NAME_RE.search(name):
+                    continue
+                tick = text.index("`", m.end() - 1)
+                body, end_idx = _template_body(text, tick)
+                if len(body.strip()) < NAMED_MIN_BODY:
+                    continue
+                emit(name, relpath, line_of(text, m.start()), line_of(text, end_idx),
+                     body, "system-prompt", "embedded literal (TS/JS template)")
+            # JS/TS: prompt builder functions
+            for m in JS_BUILDER_RE.finditer(text):
+                name = m.group(1)
+                emit(name, relpath, line_of(text, m.start()), line_of(text, m.end()),
+                     "", "prompt-template", "embedded prompt builder (fn)")
+        else:
+            # Python: named triple-quoted assignments
+            for m in PY_TRIPLE_RE.finditer(text):
+                name = m.group(2)
+                lit = _read_string_literal(text, m.start(len(m.groups())))
+                quote_at = text.index(m.group(3), m.start())
+                lit = _read_string_literal(text, quote_at)
+                body = lit[0] if lit else ""
+                end_line = line_of(text, lit[1]) if lit else line_of(text, m.start())
+                prompty = bool(PROMPTY_NAME_RE.search(name))
+                if prompty and len(body.strip()) < NAMED_MIN_BODY:
+                    continue
+                if not prompty and len(body) < EMBEDDED_MIN_BODY:
+                    continue
+                emit(name, relpath, line_of(text, m.start()), end_line,
+                     body, "system-prompt", "embedded literal (python)")
+            # Python: PromptTemplate / from_template / from_messages
+            for m in PY_BUILDER_RE.finditer(text):
+                name = m.group(1) or ""
+                lit = _read_string_literal(text, m.end())
+                body = lit[0] if lit else ""
+                if len(body) < EMBEDDED_MIN_BODY and not PROMPTY_NAME_RE.search(name):
+                    continue
+                end_line = line_of(text, lit[1]) if lit else line_of(text, m.end())
+                emit(name, relpath, line_of(text, m.start()), end_line,
+                     body, "prompt-template", "embedded prompt (PromptTemplate)")
+
+        # Any language: inline role:"system" message content
+        for m in ROLE_SYSTEM_RE.finditer(text):
+            lit = _read_string_literal(text, m.end())
+            body = lit[0] if lit else ""
+            if len(body) < EMBEDDED_MIN_BODY:
+                continue
+            emit("", relpath, line_of(text, m.start()),
+                 line_of(text, lit[1]) if lit else line_of(text, m.end()),
+                 body, "system-prompt", "embedded system message (role:system)")
+
+    return out, len(targets)
 
 
 # ── ADAPT (3): structured registry metadata (model/tools/output schema/etc). ──
@@ -426,12 +554,13 @@ def parse_registry():
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
+    embedded, scanned_files = discover_embedded()
     artifacts = (
         discover_skill_folders()
         + discover_agents()
         + discover_commands()
         + discover_prompt_files()
-        + discover_embedded()
+        + embedded
         + discover_instruction_docs()
     )
 
@@ -466,7 +595,12 @@ def main():
                 ".claude/agents/*.md and **/agents/*.md (subagent definitions)",
                 "instruction docs: " + ", ".join(INSTRUCTION_DOCS),
                 "prompt files: prompts/**, *.prompt(.md|.yaml), *.prompty, *.jinja",
-                "embedded prompts scanned in: " + (", ".join(EMBEDDED_FILES) or "(none configured)"),
+                ("embedded prompts in code: " + (
+                    "DISABLED" if not EMBEDDED_SCAN else
+                    ("explicit list (" + ", ".join(EMBEDDED_FILES) + ")") if EMBEDDED_FILES else
+                    f"auto-scanned {scanned_files} source files ({', '.join(SCAN_EXTS)}) "
+                    "for named prompt/template literals, builder fns, "
+                    "PromptTemplate/from_template/from_messages, and role:system content")),
             ],
             "counts_by_kind": counts,
             "counts_by_category": cat_counts,
@@ -485,6 +619,12 @@ def main():
     for k, v in sorted(counts.items()):
         print(f"    {k}: {v}")
     print(f"  PyYAML available: {HAVE_YAML}")
+    if EMBEDDED_SCAN:
+        mode = "explicit list" if EMBEDDED_FILES else f"auto-walk of {scanned_files} source files"
+        print(f"  embedded-prompt scan: {mode} ({counts.get('system-prompt', 0)} system-prompt + "
+              f"{counts.get('prompt-template', 0)} prompt-template found)")
+    else:
+        print("  embedded-prompt scan: DISABLED (set EMBEDDED_SCAN = True to scan in-code prompts)")
     if not deduped:
         print("  NOTE: nothing found — adapt the discover_*() functions to this repo's conventions.")
 

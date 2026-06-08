@@ -49,6 +49,23 @@ literals, `PromptTemplate`/`.from_template(...)`, triple-quoted / template-liter
 prompt blocks — record path AND line range). Note what you find so coverage is
 auditable.
 
+**Ask the user about in-code prompts.** Many repos keep LLM prompts directly in
+source, not in `SKILL.md`/`prompts/` files. The skeleton's embedded scanner can
+auto-walk the whole source tree, but that can be noisy or heavy on large
+polyglot repos — and the user usually knows where the prompts live. Before
+running discovery, do a quick grep for the embedded signatures above; if the repo
+looks like it has in-code prompts, **ask** how to handle them and set the
+skeleton accordingly:
+
+- **Auto-scan all source** (default): `EMBEDDED_SCAN = True`, `EMBEDDED_FILES = []`
+  — walks `SCAN_EXTS`, name- and length-gated to limit noise.
+- **Specific files/dirs only**: list them in `EMBEDDED_FILES` (narrower, no walk).
+- **Skip in-code prompts**: `EMBEDDED_SCAN = False`.
+
+If the grep finds nothing prompt-shaped, say so and proceed with the default.
+Either way, the manifest's coverage block records exactly what was scanned, so
+the choice is auditable.
+
 ## Phase 1 — Discover everything
 
 1. Copy the kit into the target verbatim:

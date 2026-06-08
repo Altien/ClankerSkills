@@ -62,6 +62,16 @@ code** (`*_PROMPT`/`SYSTEM_PROMPT`/`*_TEMPLATE`, `role:"system"`,
 `PromptTemplate`/`.from_template`, triple-quoted/template-literal blocks — record
 path AND line range). Record what you find.
 
+The skeleton's embedded scanner **auto-walks the source tree by default**
+(`EMBEDDED_SCAN`/`EMBEDDED_FILES`/`SCAN_EXTS`) and handles named template-literal
+and triple-quoted constants, prompt builder functions,
+`PromptTemplate`/`from_template`/`from_messages`, and inline `role:"system"`
+content — name- and length-gated to limit noise. Because a full-tree scan can be
+noisy or heavy on large polyglot repos, **ask the user** whether to scan all
+source, only specific files/dirs (`EMBEDDED_FILES`), or skip it
+(`EMBEDDED_SCAN = False`). The manifest's coverage block records exactly what was
+scanned.
+
 ### Phase 1 — Discover everything
 Copy the kit into `docs/explorer/`. Start `build_explorer.py` from the skeleton
 and adapt its discovery to the Phase-0 conventions. Run it; iterate until
