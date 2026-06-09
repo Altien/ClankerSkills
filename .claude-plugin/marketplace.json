@@ -7,6 +7,15 @@
   },
   "plugins": [
     {
+      "name": "adopt-repo",
+      "displayName": "Adopt Repo",
+      "source": "./adopt-repo",
+      "description": "Onboard an upstream OSS repo into the dev workspace end to end: create a private <name>-dev mirror, give it an altien-main development trunk (main stays a pristine upstream mirror), vendor the explorer skills into the repo and push them so Claude in the cloud can build the documentation islands, pause for that cloud build, then pull the islands back and register them on the docs launcher. A sequencer over private-mirror, fork-trunk, the explorer skills, and rescan-docs. Exposes /adopt-repo.",
+      "author": {
+        "name": "Altien"
+      }
+    },
+    {
       "name": "skills-explorer",
       "displayName": "Skills & Prompts Explorer",
       "source": "./skills-explorer",

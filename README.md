@@ -18,6 +18,7 @@ you want and the skill auto-triggers.
 
 | Plugin | Command | What it builds |
 |--------|---------|----------------|
+| **Adopt Repo** (`adopt-repo`) | `/adopt-repo` | The front-runner. Onboards an upstream OSS repo into the dev workspace end to end — private `<name>-dev` mirror → `altien-main` development trunk → vendors the explorer skills into the repo and pushes them → **pauses** so Claude in the cloud can build the documentation islands → pulls them back and registers them on the docs launcher. A sequencer over the four plugins below plus `rescan-docs`. |
 | **Skills & Prompts Explorer** (`skills-explorer`) | `/build-explorer` | A dependency-light **static** site documenting every skill, agent, prompt-template, system-prompt, and instruction doc in the repo — each with an assessment card, a programmatic-surface panel (tool grants, MCP servers, invocation mode, bundled resources), and a workflow diagram whose steps slice their verbatim source. |
 | **Repository Explorer** (`repository-explorer`) | `/repository-explorer` | A **static** browsable Markdown documentation site (file tree, search, rendered mermaid, optional review/commenting) **plus** a code-verified "Architecture & Technology" analysis published as both Markdown and an expressive HTML page with hand-authored inline-SVG diagrams. |
 | **The Atlas** (`atlas-explorer`) | `/build-atlas` | A **live FastAPI** documentation navigator that binds every markdown doc to the code it describes: doc↔code 50/50 views, tree-sitter symbol slicing with fold regions, SQLite FTS5 search, live drift detection, authored journeys + clickable SVG diagrams, and anchored feedback with clipboard agent-brief export. |
@@ -48,6 +49,7 @@ copy-verbatim engine you lift into a target repo. See each plugin's `SKILL.md`.
 ```
 .claude-plugin/marketplace.json     # marketplace manifest (lists all plugins)
 
+adopt-repo/             commands/adopt-repo.md           skills/adopt-repo/SKILL.md   # the orchestrator
 skills-explorer/        commands/build-explorer.md       skills/build-explorer/{SKILL.md, kit/, templates/, reference/, examples/}
 repository-explorer/    commands/repository-explorer.md  skills/repository-explorer/{SKILL.md, kit/, reference/, examples/}
 atlas-explorer/         commands/build-atlas.md          skills/atlas-explorer/{SKILL.md, kit/, reference/, templates/, examples/}
@@ -83,6 +85,9 @@ repo inherits it.
 
 ## Status
 
+- `adopt-repo` v0.1.0 — the orchestrator. Sequences `private-mirror` →
+  `fork-trunk` → vendor explorers + push → cloud island build (paused handoff) →
+  `rescan-docs`. First built to onboard `thepranky/cr_oss` as `Altien/cr_oss-dev`.
 - `skills-explorer` v0.2.1 — first built for and proven on a 13-plugin legal
   marketplace (206 artifacts, 191 curated graphs, 37k+ structural checks); also
   run on a ~250-doc legal-AI platform (23 artifacts incl. 8 in-code system
