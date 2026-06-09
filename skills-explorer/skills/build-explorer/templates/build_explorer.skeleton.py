@@ -377,6 +377,12 @@ PY_BUILDER_RE = re.compile(
     r"(?:(\w+)\s*=\s*)?(?:[\w.]*Prompt(?:Template)?|\w*\.from_template|\w*\.from_messages)\s*\(")
 # Inline chat messages: role:"system"  /  ("system", "…")
 ROLE_SYSTEM_RE = re.compile(r"""['"]?role['"]?\s*[:=]\s*['"]system['"]|\(\s*['"]system['"]\s*,""")
+# Strong system/instruction-prompt OPENERS — let the scanner accept a JS/TS
+# template literal on its CONTENT when the identifier isn't prompt-shaped
+# (real prompts are often named EXTRACTION_SYSTEM / SYSTEM / systemContent,
+# whose bodies still begin "You are …").
+PROMPT_OPENER_RE = re.compile(
+    r"(?i)^(you are|you will|you must|your task|your job|your role|act as)\b")
 
 
 def _read_string_literal(text: str, i: int):
@@ -421,6 +427,22 @@ def _template_body(text: str, start: int):
             continue
         if text[i] == "`":
             return text[start + 1:i], i
+        i += 1
+    return text[start + 1:], n
+
+
+def _brace_body(text: str, start: int):
+    """From the opening brace at `start`, return (inner_body, end_index) of its
+    matching close brace. Naive depth counter — adequate for prompt-builder fns."""
+    depth, i, n = 0, start, len(text)
+    while i < n:
+        c = text[i]
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start + 1:i], i
         i += 1
     return text[start + 1:], n
 
@@ -491,19 +513,30 @@ def discover_embedded():
             # JS/TS: named template-literal consts
             for m in JS_CONST_RE.finditer(text):
                 name = m.group(1)
-                if not PROMPTY_NAME_RE.search(name):
-                    continue
                 tick = text.index("`", m.end() - 1)
                 body, end_idx = _template_body(text, tick)
-                if len(body.strip()) < NAMED_MIN_BODY:
+                stripped = body.strip()
+                # Accept on a prompt-y NAME or a strong system-prompt OPENER in the
+                # body. Drop assembly fragments that start with an interpolation
+                # (`${columnPrompt}…`) — those are wrappers, not authored prompts.
+                if not (PROMPTY_NAME_RE.search(name) or PROMPT_OPENER_RE.match(stripped)):
+                    continue
+                if stripped.startswith("${"):
+                    continue
+                if len(stripped) < NAMED_MIN_BODY:
                     continue
                 emit(name, relpath, line_of(text, m.start()), line_of(text, end_idx),
                      body, "system-prompt", "embedded literal (TS/JS template)")
-            # JS/TS: prompt builder functions
+            # JS/TS: prompt builder functions — capture the whole fn body so the
+            # artifact carries a real line range and rendered excerpt.
             for m in JS_BUILDER_RE.finditer(text):
                 name = m.group(1)
-                emit(name, relpath, line_of(text, m.start()), line_of(text, m.end()),
-                     "", "prompt-template", "embedded prompt builder (fn)")
+                brace = text.find("{", m.end())
+                body, end_idx = "", m.end()
+                if brace != -1:
+                    body, end_idx = _brace_body(text, brace)
+                emit(name, relpath, line_of(text, m.start()), line_of(text, end_idx),
+                     body, "prompt-template", "embedded prompt builder (fn)")
         else:
             # Python: named triple-quoted assignments
             for m in PY_TRIPLE_RE.finditer(text):

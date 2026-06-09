@@ -46,8 +46,11 @@ any. Skim the tree, READMEs, and config. Probe for: Claude Skills folders
 turn caps, tools, output schema, strengths/limitations), and **embedded prompts
 in code** (`*_PROMPT`/`SYSTEM_PROMPT`/`*_TEMPLATE` constants, `role:"system"`
 literals, `PromptTemplate`/`.from_template(...)`, triple-quoted / template-literal
-prompt blocks — record path AND line range). Note what you find so coverage is
-auditable.
+prompt blocks — record path AND line range). Embedded JS/TS template literals are
+now matched on a prompt-y **name** OR a strong system-prompt **opener** in the body
+(`You are …`, `Your task …`, `Act as …`), so prompts named `EXTRACTION_SYSTEM` /
+`SYSTEM` / `systemContent` are caught; `${…}`-prefixed assembly fragments (wrappers,
+not authored prompts) are skipped. Note what you find so coverage is auditable.
 
 **Ask the user about in-code prompts.** Many repos keep LLM prompts directly in
 source, not in `SKILL.md`/`prompts/` files. The skeleton's embedded scanner can
