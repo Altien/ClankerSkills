@@ -140,8 +140,11 @@ pixel-checked; recommend `python3 DEST/serve.py` to eyeball.
 Write/refresh `DEST/README.md`: how to serve, how to regenerate the manifest and
 reassemble data, and the rules *"when an artifact's workflow changes, update its
 graph"* and *"when its behaviour changes, update its assessment block."* Report
-the coverage counts. Commit on a feature branch only if asked; do not open a PR
-unless explicitly requested.
+the coverage counts. Once `verify.cjs` exits 0, **commit the explorer on a
+feature branch automatically** (a clear message naming the artifact counts) —
+don't stop to ask. Only **opening a PR** needs explicit confirmation (it's
+outward-facing); the commit does not. If the working tree isn't a git repo, say
+so and skip the commit rather than initialising one.
 
 ## Incremental updates & the doc-build changelog
 

@@ -83,8 +83,11 @@ repo inherits it.
 
 ## Status
 
-- `skills-explorer` v0.1.0 — first built for and proven on a 13-plugin legal
-  marketplace (206 artifacts, 191 curated graphs, 37k+ structural checks).
+- `skills-explorer` v0.2.1 — first built for and proven on a 13-plugin legal
+  marketplace (206 artifacts, 191 curated graphs, 37k+ structural checks); also
+  run on a ~250-doc legal-AI platform (23 artifacts incl. 8 in-code system
+  prompts). v0.2.1: auto-commits the explorer once verify.cjs is green (PRs still
+  need explicit confirmation).
 - `repository-explorer` v0.1.0.
 - `atlas-explorer` v0.2.1 — engine proven on a ~140K-LOC repo (110 docs bound to
   its code) and a second ~250-doc repo; ships a 128-test engine suite (passes
