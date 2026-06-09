@@ -1,0 +1,8 @@
+{
+  "name": "fork-trunk",
+  "version": "0.1.0",
+  "description": "Turn an existing GitHub fork into a clean two-branch setup: a fork-specific default development branch (e.g. <org>-main) that all your work lands on, while main stays a pristine mirror of upstream you only ever sync from. Sets the new branch as the GitHub default and the local default, routes unmerged local work onto it via PR (never onto main), and can disable GitHub Actions on the fork.",
+  "author": {
+    "name": "Altien"
+  }
+}

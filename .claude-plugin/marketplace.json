@@ -25,6 +25,15 @@
       }
     },
     {
+      "name": "fork-trunk",
+      "displayName": "Fork Trunk",
+      "source": "./fork-trunk",
+      "description": "Turn an existing GitHub fork into a clean two-branch setup: a fork-specific default development branch (e.g. <org>-main) that all your work lands on, while main stays a pristine mirror of upstream you only sync from. Creates the trunk off the upstream-synced main, sets it as the GitHub AND local default, routes unmerged local work onto it via PR (never onto main), and can disable GitHub Actions on the fork. Exposes /fork-trunk.",
+      "author": {
+        "name": "Altien"
+      }
+    },
+    {
       "name": "repository-explorer",
       "displayName": "Repository Explorer",
       "source": "./repository-explorer",

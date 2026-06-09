@@ -22,6 +22,7 @@ you want and the skill auto-triggers.
 | **Repository Explorer** (`repository-explorer`) | `/repository-explorer` | A **static** browsable Markdown documentation site (file tree, search, rendered mermaid, optional review/commenting) **plus** a code-verified "Architecture & Technology" analysis published as both Markdown and an expressive HTML page with hand-authored inline-SVG diagrams. |
 | **The Atlas** (`atlas-explorer`) | `/build-atlas` | A **live FastAPI** documentation navigator that binds every markdown doc to the code it describes: doc↔code 50/50 views, tree-sitter symbol slicing with fold regions, SQLite FTS5 search, live drift detection, authored journeys + clickable SVG diagrams, and anchored feedback with clipboard agent-brief export. |
 | **Private Mirror** (`private-mirror`) | `/mirror-repo` | Sets up the current empty directory as a **private mirror** of a public GitHub repo — pull upstream updates, but pushes to upstream are physically disabled and Actions are turned off before the first push. |
+| **Fork Trunk** (`fork-trunk`) | `/fork-trunk` | Gives an **existing fork** its own default development branch (e.g. `<org>-main`) that all work lands on, while `main` stays a pristine mirror of upstream you only sync from. Sets the trunk as the GitHub + local default, routes unmerged local work onto it via PR (never onto `main`), and can disable Actions on the fork. |
 
 ### Static explorers vs. The Atlas
 
@@ -89,3 +90,5 @@ repo inherits it.
   its code); ships a 127-test engine suite (passes standalone) and a full worked
   instance.
 - `private-mirror` v0.1.0.
+- `fork-trunk` v0.1.0 — distilled from setting up a private fork's `altien-main`
+  trunk: keep `main` tracking upstream, develop on `<org>-main`, and disable CI.
