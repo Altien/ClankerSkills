@@ -28,7 +28,8 @@ def code_repo(sample_repo, sample_config_path):
 
             Entry point is `src/main.ts` (see `src/main.ts:12` too) and the
             helpers live in `src/util/`. The ghost module `src/missing.ts`
-            was removed. Prose like and/or must not match. See also the
+            was removed. Prose like and/or must not match. The REST route
+            `src/v1/users` is an endpoint, not a file. See also the
             [guide](docs/guide.md) and the doc `docs/guide.md`.
             """
         ),
@@ -67,6 +68,9 @@ def test_scan_records_refs_resolution(code_repo):
     assert by_raw["src/util/"].resolved is True and by_raw["src/util/"].is_dir is True
     assert by_raw["src/missing.ts"].resolved is False
     assert "and/or" not in by_raw
+    # An unresolved, extensionless token under a code root is a route/namespace,
+    # not a file claim — it must not be recorded as a (drifting) code reference.
+    assert "src/v1/users" not in by_raw
 
 
 def test_doc_view_renders_chips(code_repo):

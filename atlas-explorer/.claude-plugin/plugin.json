@@ -1,6 +1,6 @@
 {
   "name": "atlas-explorer",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Builds The Atlas for a repository: a live FastAPI documentation navigator that binds every markdown doc to the code it describes. Doc↔code 50/50 views (path mentions become chips; the panel shows tree-sitter-sliced, Pygments-highlighted source with fold regions and jump-to-symbol), SQLite FTS5 search, live drift detection (every doc→code reference verified against the tree, plus deterministic quantitative-claim counters), authored curation (per-doc summaries, sequenced journeys, clickable SVG flow diagrams), and anchored commenting with clipboard agent-brief export. The heavyweight, server-based sibling to the static explorers. Exposes /build-atlas.",
   "author": {
     "name": "Altien"

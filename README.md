@@ -86,9 +86,11 @@ repo inherits it.
 - `skills-explorer` v0.1.0 — first built for and proven on a 13-plugin legal
   marketplace (206 artifacts, 191 curated graphs, 37k+ structural checks).
 - `repository-explorer` v0.1.0.
-- `atlas-explorer` v0.1.0 — engine proven on a ~140K-LOC repo (110 docs bound to
-  its code); ships a 127-test engine suite (passes standalone) and a full worked
-  instance.
+- `atlas-explorer` v0.2.1 — engine proven on a ~140K-LOC repo (110 docs bound to
+  its code) and a second ~250-doc repo; ships a 128-test engine suite (passes
+  standalone) and a full worked instance. v0.2.1: an unresolved path token is only
+  recorded as a code reference if its basename has a file extension, so REST routes
+  (`api/v1/...`) and conceptual namespaces no longer pollute the drift report.
 - `private-mirror` v0.1.0.
 - `fork-trunk` v0.1.0 — distilled from setting up a private fork's `altien-main`
   trunk: keep `main` tracking upstream, develop on `<org>-main`, and disable CI.

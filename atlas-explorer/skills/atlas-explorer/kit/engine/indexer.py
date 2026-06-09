@@ -299,6 +299,15 @@ def parse_doc(
                     line_file_refs.append((position, ref))
                 if token in seen_refs:
                     continue
+                # An unresolved token is only a code-reference *claim* if it
+                # names a file — i.e. its basename carries an extension. Bare
+                # unresolved tokens under a code root are overwhelmingly REST
+                # routes or conceptual namespaces ("api/v1/users", "gateway/backend"),
+                # not paths the doc claims exist; recording them would flood the
+                # drift report with non-claims. Resolved tokens (real files AND
+                # directories) are always recorded, so genuine chips are untouched.
+                if not ref.resolved and not PurePosixPath(target).suffix:
+                    continue
                 seen_refs.add(token)
                 code_refs.append(ref)
             # `name()` mentions pair with the NEAREST resolved file ref on their line
