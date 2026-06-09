@@ -96,3 +96,24 @@ Node shape:
   read-only tool scoping, register/tracker state files, human-review gates.
 - Mark nothing as authored that you copied mechanically; never present a
   guess — if the source doesn't say it, leave the field out.
+
+## Coverage tiers for a large roster (bulk agents / prompts)
+
+Not every artifact needs a full curated graph. There are three tiers, and you can
+mix them in one build:
+
+1. **Curated** — a hand-authored `graph` + `assessment` in a `data/*.json`
+   fragment. Reserve for the distinctive artifacts that earn the effort.
+2. **Shape + notes** — no curated graph, but a `notes` map in a fragment
+   (`{ "notes": { "<id>": { "model": "…" } } }` for an io-shape artifact, or
+   `{ "<id>": { "<heading text>": "…" } }` for a heading-shape one). The note
+   rides the auto-derived shape diagram. For a roster of hundreds of
+   near-identical agents, **generate** these notes from each artifact's own
+   source (its registry `description`, or the section lede under each heading) and
+   say so in the README — derived-from-source is honest; templated filler is not.
+3. **Shape only** — no graph, no notes. The engine's shape fallback renders an
+   honest `input → model → output` (the model node is engine-described, e.g.
+   "a single model completion — the source describes no explicit multi-step
+   process"), which satisfies `verify.cjs` with zero authoring. This is what
+   `--manifest-only` ships, so coverage never regresses to zero for ANY artifact
+   kind — `agent`, `system-prompt`, `prompt-template`, or a multi-turn agent.

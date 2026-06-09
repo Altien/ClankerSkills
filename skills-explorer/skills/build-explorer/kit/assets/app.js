@@ -764,7 +764,18 @@
     var ioNotes = (window.EXPLORER_NOTES && window.EXPLORER_NOTES[a.id]) || {};
     var io = [];
     io.push(start);
-    var model = { id: "model", type: "decision", label: a.model ? "Model · " + a.model : "Language model", desc: a.maxTurns ? "≤ " + a.maxTurns + " turns" : (a.kind === "prompt-template" ? "fills template variables" : "single completion") };
+    // Honest, >=20-char default for EVERY branch so a curation-free
+    // (--manifest-only) build clears verify's authored-summary floor on this
+    // synthetic node — it represents the ABSENCE of a multi-step process, so the
+    // engine, not an author, describes it. An authored EXPLORER_NOTES.model still
+    // overrides. (Previously only prompt-template had a >=20-char desc; agents,
+    // system-prompts, and short maxTurns values fell through and failed verify.)
+    var modelDesc = a.maxTurns
+      ? "agentic loop — up to " + a.maxTurns + " model turns before it must answer"
+      : (a.kind === "prompt-template"
+          ? "fills the template variables, then runs one model completion"
+          : "a single model completion — the source describes no explicit multi-step process");
+    var model = { id: "model", type: "decision", label: a.model ? "Model · " + a.model : "Language model", desc: modelDesc };
     if (ioNotes.model) model.note = ioNotes.model;
     io.push(model);
     io.push(outputNode(a));
