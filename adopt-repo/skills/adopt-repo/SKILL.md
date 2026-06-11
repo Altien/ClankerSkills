@@ -117,12 +117,17 @@ live *inside* the repo and be pushed before the cloud can run them.
 
 3. If the upstream repo already ships a same-named skill under `.claude/`, **do
    not clobber it** — warn the user and skip that one.
-4. Commit on `altien-main` and push:
+4. Commit on `altien-main` and push. **Force-add** — many repos `.gitignore`
+   `.claude/`, and a plain `git add .claude` would silently stage nothing,
+   leaving the cloud session with no skills:
    ```
-   git add .claude
+   git add -f .claude
    git commit -m "Vendor explorer skills for cloud island builds"
    git push origin altien-main
    ```
+   (If a plain `git add .claude` reports "paths are ignored", that gitignore is
+   why — `-f` is the fix; the vendored skills must be tracked or a cloud clone
+   won't have them.)
 
 These pushes go **only** to the dev repo this skill just created — that is the
 explicit intent of running `/adopt-repo`, so no extra confirmation is needed for
