@@ -458,6 +458,22 @@ body.panel-open .code-panel {
   margin: 0 auto;
 }
 
+/* journey stop targeting code: the panel IS the page content, not a toggle.
+   Journey pages are never .code-page and never set body.panel-open, so the
+   base `.code-panel { display: none }` must be overridden here. */
+.journey-content.code-panel.standalone {
+  display: block;
+  position: sticky;
+  top: 65px;
+  align-self: start;
+  max-height: calc(100vh - 80px);
+  overflow: auto;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
 /* ── Drift ── */
 .sidebar-links {
   display: flex;

@@ -135,3 +135,13 @@ def test_dangling_on_drift_page(journey_config):
     page = client.get("/drift").text
     assert "Dangling journey stops" in page
     assert "no-such-heading" in page
+def test_journey_code_stop_panel_visible_in_css():
+    """Journey pages are never .code-page and never set body.panel-open, so the
+    base `.code-panel { display: none }` must be overridden for journey stops
+    (regression: code-targeted stops rendered as a blank panel)."""
+    from pathlib import Path
+
+    css = (Path(__file__).resolve().parents[1] / "static" / "styles.css").read_text(
+        encoding="utf-8"
+    )
+    assert ".journey-content.code-panel.standalone" in css
