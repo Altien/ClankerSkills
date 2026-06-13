@@ -2,9 +2,11 @@
 description: >
   Build a self-contained, static review harness for ONE PRD / design / epic: a
   Markdown browser scoped to a single PRD folder plus the source it references
-  (driven by a referenced-files.txt list in the PRD folder), with a quiet
-  commenting layer — panel closed by default, right-click a selection to comment,
-  inline marker on commented text. Thin alias for the prd-reviewer skill.
+  (driven by a referenced-files.txt list in the PRD folder). Sidebar leads with the
+  PRD and groups referenced source (collapsed); source renders colour-coded,
+  line-numbered, with brace folding; mermaid diagrams get a full-screen zoom/pan
+  overlay. Quiet commenting — panel closed by default, right-click a selection to
+  comment, inline marker on commented text. Thin alias for the prd-reviewer skill.
 argument-hint: "[--no-comments] <PRD folder, e.g. docs/JIRA/JIRA-1855>"
 ---
 

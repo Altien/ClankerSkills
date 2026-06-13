@@ -5,11 +5,14 @@ description: >
   the whole repo. Scopes a Markdown browser to a single PRD folder plus the source
   files that PRD references (driven by a simple referenced-files.txt list in the PRD
   folder), so a reviewer reads the design and clicks straight through to the real
-  code. Quiet review/commenting layer: the comments panel stays closed until asked
-  for; select text and right-click to comment; commented passages get an inline
-  marker. Use when the user says "build a PRD browser/reviewer", "make a review
-  harness for this PRD / design doc / epic", "let me review and comment on <doc>",
-  or runs /prd-reviewer.
+  code. The sidebar leads with the PRD docs and groups the referenced source as a
+  collapsed secondary section; source files render with highlight.js (colour-coded,
+  line-numbered, with brace folding on functions/classes); mermaid diagrams get a
+  full-screen zoom/pan overlay. Quiet review/commenting layer: the comments panel
+  stays closed until asked for; select text and right-click to comment; commented
+  passages get an inline marker. Use when the user says "build a PRD browser/reviewer",
+  "make a review harness for this PRD / design doc / epic", "let me review and comment
+  on <doc>", or runs /prd-reviewer.
 argument-hint: "[--no-comments] <PRD folder, e.g. docs/JIRA/JIRA-1855>"
 ---
 
@@ -20,17 +23,26 @@ design / epic** under `<PRD_DIR>/review/`. Unlike the repository-explorer (which
 documents a whole repo), this is scoped to **one document set**:
 
 1. **The PRD folder** — every Markdown doc inside `<PRD_DIR>` (the design, decisions,
-   diagrams), browsable with a tree, search, faithful GFM rendering and rendered
-   ```mermaid fences.
-2. **The source it references** — the files listed in `<PRD_DIR>/referenced-files.txt`
-   are made navigable and viewable, so the reviewer clicks from a claim in the design
-   straight to the actual code.
+   diagrams). The sidebar **leads with these PRD documents**. Faithful GFM rendering;
+   ```mermaid fences render as diagrams, each with a **full-screen button** (⛶) that
+   opens a zoom/pan overlay (scroll to zoom, drag to pan, Esc to close) — so dense
+   diagrams are readable.
+2. **The source it references** — the files listed in `<PRD_DIR>/referenced-files.txt`,
+   shown in the sidebar as a **secondary "Referenced source" section, collapsed by
+   default and grouped by the per-line label** (not raw repo path). Source files render
+   in a **highlight.js code view**: colour-coded (light/dark themed), line-numbered, with
+   **brace folding** on functions/classes/namespaces. The reviewer clicks from a claim in
+   the design straight to the real, readable code.
 
-**Quiet commenting** (the point of this skill vs the repo explorer): the comments
-panel is **closed by default**. To comment, **select text and right-click** → a small
-"Comment" action appears. Saved comments **highlight the passage inline with a 💬
-marker**; clicking the marker opens that comment. Heading markers are hover-only.
-Comments persist in `localStorage` and export to JSON / copy-as-Markdown.
+**Quiet commenting** (a defining trait vs the repo explorer): the comments panel is
+**closed by default**. To comment, **select text and right-click** → a small "Comment"
+action appears. Saved comments **highlight the passage inline with a 💬 marker**;
+clicking the marker opens that comment. Heading markers are hover-only. Comments persist
+in `localStorage` and export to JSON / copy-as-Markdown.
+
+The kit's vendored assets are `marked.min.js` (Markdown), `highlight.min.js` (the
+common highlight.js bundle — C#/XML/JSON and ~33 more), and `mermaid.min.js`. All are
+copy-verbatim; do not hand-edit them.
 
 The engine is bundled in this skill's own directory (the folder containing this
 `SKILL.md`), under `kit/`. Locate it via `${CLAUDE_SKILL_DIR}` (equivalently
@@ -66,7 +78,7 @@ this `SKILL.md`. Then let `KIT = SELF/kit` and `DEST = <repo>/<PRD_DIR>/review`.
 
 1. **Copy the kit verbatim** into `DEST/`: `index.html`, `serve.py`, `verify.cjs`,
    `build_manifest.py`, and `assets/*` (`app.js`, `styles.css`, `marked.min.js`,
-   `mermaid.min.js`), preserving `assets/`.
+   `highlight.min.js`, `mermaid.min.js`), preserving `assets/`.
 2. **Set the scope** — in `DEST/build_manifest.py`, set `PRD_DIR` to the repo-relative
    PRD folder. (Repo root is auto-detected by walking up to `.git`, so `DEST` may be
    nested at any depth.)
