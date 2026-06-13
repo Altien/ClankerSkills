@@ -424,6 +424,9 @@ mark { background: var(--mark); color: inherit; padding: 0 2px; border-radius: 2
   flex-direction: column;
   min-height: 0;
 }
+/* Honour the hidden attribute — the panel is CLOSED until the reviewer opens it.
+   Without this, .comments{display:flex} overrides [hidden] and the panel is always shown. */
+.comments[hidden] { display: none; }
 .comments-head {
   display: flex;
   align-items: center;
