@@ -202,29 +202,75 @@
     localStorage.setItem(LS_COLLAPSED, JSON.stringify(map));
   }
 
+  // A PRD reviewer leads with the PRD documents; the referenced source is a
+  // secondary section, collapsed by default and grouped by its sidebar label
+  // (from referenced-files.txt) rather than by raw repo path.
   function buildTree(filter) {
     var collapsed = getCollapsed();
-    var root = { dirs: {}, files: [] };
     var f = (filter || "").toLowerCase();
-
+    var prd = [], refs = [];
     state.manifest.files.forEach(function (file) {
       if (f) {
         var hay = (file.path + " " + file.title).toLowerCase();
         if (hay.indexOf(f) === -1) return;
       }
-      var parts = file.path.split("/");
-      var node = root;
-      for (var i = 0; i < parts.length - 1; i++) {
-        var d = parts[i];
-        if (!node.dirs[d]) node.dirs[d] = { dirs: {}, files: [], _path: parts.slice(0, i + 1).join("/") };
-        node = node.dirs[d];
-      }
-      node.files.push(file);
+      (file.group === "reference" ? refs : prd).push(file);
     });
 
     el.tree.innerHTML = "";
-    el.tree.appendChild(renderTreeNode(root, "", collapsed, !!f));
+
+    // --- PRD documents (lead the sidebar) ---
+    if (prd.length) {
+      el.tree.appendChild(sectionHead("📋 PRD documents", prd.length));
+      prd.forEach(function (file) { el.tree.appendChild(renderTreeFile(file)); });
+    }
+
+    // --- Referenced source (secondary; collapsed by default, grouped by label) ---
+    if (refs.length) {
+      var REF_KEY = "__referenced__";
+      var wrap = document.createElement("div");
+      wrap.className = "tree-node tree-section";
+      var open = f ? true : (collapsed[REF_KEY] === "open"); // default collapsed
+      if (!open) wrap.classList.add("collapsed");
+
+      var label = document.createElement("div");
+      label.className = "tree-label tree-section-label";
+      label.innerHTML =
+        '<span class="twisty">▾</span>📎 <span>Referenced source</span>' +
+        '<span class="tree-count">' + refs.length + "</span>";
+      label.addEventListener("click", function () {
+        wrap.classList.toggle("collapsed");
+        var c = getCollapsed();
+        if (wrap.classList.contains("collapsed")) delete c[REF_KEY];
+        else c[REF_KEY] = "open";
+        setCollapsed(c);
+      });
+      wrap.appendChild(label);
+
+      var children = document.createElement("div");
+      children.className = "tree-children";
+      var groups = {};
+      refs.forEach(function (file) { (groups[file.category] = groups[file.category] || []).push(file); });
+      Object.keys(groups).sort().forEach(function (lbl) {
+        var gh = document.createElement("div");
+        gh.className = "tree-grouplabel";
+        gh.textContent = lbl;
+        children.appendChild(gh);
+        groups[lbl].forEach(function (file) { children.appendChild(renderTreeFile(file)); });
+      });
+      wrap.appendChild(children);
+      el.tree.appendChild(wrap);
+    }
+
     highlightActive();
+  }
+
+  function sectionHead(text, count) {
+    var h = document.createElement("div");
+    h.className = "tree-sectionhead";
+    h.innerHTML = "<span>" + esc(text) + "</span>" +
+      (count != null ? '<span class="tree-count">' + count + "</span>" : "");
+    return h;
   }
 
   function commentCountFor(path) {
@@ -548,24 +594,21 @@
 
   function renderMarkdown(path, file, text) {
     var baseDir = path.split("/").slice(0, -1).join("/");
-    var html;
+    var wrap = document.createElement("div");
+    wrap.className = "doc-inner";
 
     if (file.type === "markdown") {
       marked.setOptions({ gfm: true, breaks: false, headerIds: false, mangle: false });
-      html = marked.parse(text);
+      wrap.innerHTML = marked.parse(text);
+      enhanceHeadings(wrap);
+      rewriteLinks(wrap, baseDir);
+      renderMermaid(wrap); // replaces ```mermaid fences before code-block styling
+      enhanceCodeBlocks(wrap);
     } else {
-      // Non-markdown (yaml etc): render as a single code block.
-      html = "<pre><code>" + esc(text) + "</code></pre>";
+      // Source file: syntax-highlighted, line-numbered, fold-aware code view.
+      wrap.classList.add("code-view");
+      buildCodeView(wrap, path, text);
     }
-
-    var wrap = document.createElement("div");
-    wrap.className = "doc-inner";
-    wrap.innerHTML = html;
-
-    enhanceHeadings(wrap);
-    rewriteLinks(wrap, baseDir);
-    renderMermaid(wrap); // replaces ```mermaid fences before code-block styling
-    enhanceCodeBlocks(wrap);
 
     el.doc.innerHTML = "";
     el.doc.appendChild(wrap);
@@ -575,6 +618,151 @@
     // document — inline highlights on commented passages + subtle heading markers.
     el.comments.hidden = true;
     if (COMMENTING) decorateComments(path);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Source code view — highlight.js colouring + line numbers + brace folding
+  // ---------------------------------------------------------------------------
+  function langForPath(p) {
+    var ext = (p.split(".").pop() || "").toLowerCase();
+    var map = {
+      cs: "csharp", config: "xml", xml: "xml", csproj: "xml", props: "xml",
+      targets: "xml", html: "xml", json: "json", js: "javascript", ts: "typescript",
+      py: "python", java: "java", sql: "sql", sh: "bash", css: "css",
+      yml: "yaml", yaml: "yaml",
+    };
+    return map[ext] || null;
+  }
+
+  // Split highlight.js output into per-line HTML, re-opening any <span> that
+  // crosses a newline (block comments / multi-line strings) so each line is
+  // independently well-formed.
+  function splitHighlightedLines(html) {
+    var lines = [], open = [], cur = "", i = 0, n = html.length;
+    while (i < n) {
+      var ch = html[i];
+      if (ch === "<") {
+        var gt = html.indexOf(">", i);
+        if (gt === -1) { cur += html.slice(i); break; }
+        var tag = html.slice(i, gt + 1);
+        if (tag.charAt(1) === "/") open.pop();
+        else if (tag.charAt(gt - i - 1) !== "/") open.push(tag);
+        cur += tag;
+        i = gt + 1;
+      } else if (ch === "\n") {
+        for (var c = 0; c < open.length; c++) cur += "</span>";
+        lines.push(cur);
+        cur = "";
+        for (var o = 0; o < open.length; o++) cur += open[o];
+        i++;
+      } else {
+        var next = i;
+        while (next < n && html[next] !== "<" && html[next] !== "\n") next++;
+        cur += html.slice(i, next);
+        i = next;
+      }
+    }
+    lines.push(cur);
+    return lines;
+  }
+
+  // Heuristic brace folding: pair { with } (ignoring // comments and string
+  // literals cheaply). Returns { openLineIndex: closeLineIndex } for multi-line
+  // blocks. Good enough for viewing well-formatted code.
+  function computeFolds(rawLines) {
+    var stack = [], map = {};
+    for (var i = 0; i < rawLines.length; i++) {
+      var s = rawLines[i]
+        .replace(/\/\/.*$/, "")
+        .replace(/"(?:[^"\\]|\\.)*"/g, '""')
+        .replace(/'(?:[^'\\]|\\.)*'/g, "''");
+      for (var j = 0; j < s.length; j++) {
+        if (s[j] === "{") stack.push(i);
+        else if (s[j] === "}") {
+          var openI = stack.pop();
+          if (openI != null && i > openI + 1 && map[openI] == null) map[openI] = i;
+        }
+      }
+    }
+    return map;
+  }
+
+  function buildCodeView(wrap, path, text) {
+    var lang = langForPath(path);
+    var highlighted;
+    if (typeof hljs !== "undefined") {
+      try {
+        highlighted = lang
+          ? hljs.highlight(text, { language: lang, ignoreIllegals: true }).value
+          : hljs.highlightAuto(text).value;
+      } catch (e) { highlighted = esc(text); }
+    } else {
+      highlighted = esc(text);
+    }
+    var lineHtml = splitHighlightedLines(highlighted);
+    var rawLines = text.replace(/\n$/, "").split("\n");
+    while (lineHtml.length > rawLines.length) lineHtml.pop();
+    var folds = computeFolds(rawLines);
+
+    var bar = document.createElement("div");
+    bar.className = "code-toolbar";
+    bar.innerHTML =
+      '<span class="code-lang">' + esc(lang || "text") + "</span>" +
+      '<span class="code-meta">' + rawLines.length + " lines · " + path.split("/").pop() + "</span>";
+    var copyBtn = document.createElement("button");
+    copyBtn.className = "code-btn";
+    copyBtn.textContent = "Copy";
+    copyBtn.addEventListener("click", function () {
+      copyText(text);
+      copyBtn.textContent = "Copied";
+      setTimeout(function () { copyBtn.textContent = "Copy"; }, 1200);
+    });
+    bar.appendChild(copyBtn);
+    wrap.appendChild(bar);
+
+    var pre = document.createElement("pre");
+    pre.className = "code-block hljs";
+    var code = document.createElement("code");
+    code.className = "code-lines";
+
+    for (var i = 0; i < lineHtml.length; i++) {
+      var row = document.createElement("div");
+      row.className = "cline";
+      var gutter = document.createElement("span");
+      gutter.className = "cln";
+      gutter.appendChild(document.createTextNode(i + 1));
+      if (folds[i] != null) {
+        var ft = document.createElement("span");
+        ft.className = "cfold";
+        ft.dataset.open = i;
+        ft.dataset.close = folds[i];
+        ft.title = "Collapse block";
+        ft.textContent = "▾";
+        gutter.appendChild(ft);
+      }
+      var cc = document.createElement("span");
+      cc.className = "cc";
+      cc.innerHTML = lineHtml[i] || " ";
+      row.appendChild(gutter);
+      row.appendChild(cc);
+      code.appendChild(row);
+    }
+    pre.appendChild(code);
+    wrap.appendChild(pre);
+
+    code.addEventListener("click", function (ev) {
+      var t = ev.target.closest && ev.target.closest(".cfold");
+      if (!t) return;
+      ev.stopPropagation();
+      var openI = +t.dataset.open, closeI = +t.dataset.close;
+      var collapsed = t.classList.toggle("collapsed");
+      t.textContent = collapsed ? "▸" : "▾";
+      t.title = collapsed ? "Expand block" : "Collapse block";
+      var rows = code.children;
+      for (var k = openI + 1; k <= closeI && k < rows.length; k++) {
+        rows[k].classList.toggle("cfold-hidden", collapsed);
+      }
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -617,9 +805,10 @@
           var out = mermaid.render(id, src);
           // mermaid v10+ returns a Promise; older returns a string.
           if (out && typeof out.then === "function") {
-            out.then(function (r) { fig.innerHTML = r.svg; }).catch(function () { mermaidFail(fig, src); });
+            out.then(function (r) { fig.innerHTML = r.svg; decorateMermaidFig(fig); }).catch(function () { mermaidFail(fig, src); });
           } else if (typeof out === "string") {
             fig.innerHTML = out;
+            decorateMermaidFig(fig);
           } else {
             mermaidFail(fig, src);
           }
@@ -635,6 +824,75 @@
     fig.innerHTML =
       '<div class="mermaid-error-msg">Diagram could not be rendered — showing source.</div>' +
       "<pre><code>" + esc(src) + "</code></pre>";
+  }
+
+  // Add a "full screen" control to a rendered mermaid figure (dense diagrams are
+  // otherwise tiny). Opens a zoom/pan overlay with the same SVG.
+  function decorateMermaidFig(fig) {
+    var svg = fig.querySelector("svg");
+    if (!svg) return;
+    var btn = document.createElement("button");
+    btn.className = "mermaid-fs-btn";
+    btn.type = "button";
+    btn.title = "Full screen (zoom + pan)";
+    btn.textContent = "⛶";
+    btn.addEventListener("click", function () {
+      var s = fig.querySelector("svg");
+      if (s) openDiagramOverlay(s.outerHTML);
+    });
+    fig.appendChild(btn);
+  }
+
+  function openDiagramOverlay(svgHtml) {
+    var ov = document.getElementById("mmd-overlay");
+    if (!ov) {
+      ov = document.createElement("div");
+      ov.id = "mmd-overlay";
+      ov.className = "mmd-overlay";
+      ov.innerHTML =
+        '<div class="mmd-ov-bar">' +
+        '<button data-z="out" title="Zoom out">−</button>' +
+        '<button data-z="reset" title="Fit">⤢</button>' +
+        '<button data-z="in" title="Zoom in">+</button>' +
+        '<button data-z="close" title="Close (Esc)">✕</button>' +
+        "</div><div class=\"mmd-ov-stage\" id=\"mmd-ov-stage\"></div>";
+      document.body.appendChild(ov);
+      var stage = ov.querySelector("#mmd-ov-stage");
+      var z = { s: 1, x: 0, y: 0, drag: false, px: 0, py: 0 };
+      function apply() {
+        var s = stage.firstChild;
+        if (s && s.style) s.style.transform = "translate(" + z.x + "px," + z.y + "px) scale(" + z.s + ")";
+      }
+      ov._set = function (html) {
+        stage.innerHTML = html;
+        z.s = 1; z.x = 0; z.y = 0;
+        var s = stage.firstChild;
+        if (s && s.style) { s.style.transformOrigin = "center center"; s.style.maxWidth = "none"; s.style.maxHeight = "none"; }
+        apply();
+      };
+      ov.querySelector(".mmd-ov-bar").addEventListener("click", function (ev) {
+        var b = ev.target.closest("[data-z]");
+        if (!b) return;
+        var a = b.dataset.z;
+        if (a === "in") z.s = Math.min(8, z.s * 1.25);
+        else if (a === "out") z.s = Math.max(0.2, z.s / 1.25);
+        else if (a === "reset") { z.s = 1; z.x = 0; z.y = 0; }
+        else if (a === "close") { ov.classList.remove("open"); return; }
+        apply();
+      });
+      stage.addEventListener("wheel", function (ev) {
+        ev.preventDefault();
+        z.s = Math.min(8, Math.max(0.2, z.s * (ev.deltaY < 0 ? 1.1 : 0.9)));
+        apply();
+      }, { passive: false });
+      stage.addEventListener("mousedown", function (ev) { z.drag = true; z.px = ev.clientX - z.x; z.py = ev.clientY - z.y; ev.preventDefault(); });
+      window.addEventListener("mousemove", function (ev) { if (z.drag) { z.x = ev.clientX - z.px; z.y = ev.clientY - z.py; apply(); } });
+      window.addEventListener("mouseup", function () { z.drag = false; });
+      ov.addEventListener("click", function (ev) { if (ev.target === ov) ov.classList.remove("open"); });
+      document.addEventListener("keydown", function (ev) { if (ev.key === "Escape") ov.classList.remove("open"); });
+    }
+    ov._set(svgHtml);
+    ov.classList.add("open");
   }
 
   function enhanceHeadings(wrap) {
