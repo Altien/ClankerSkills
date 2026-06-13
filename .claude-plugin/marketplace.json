@@ -43,6 +43,15 @@
       }
     },
     {
+      "name": "prd-reviewer",
+      "displayName": "PRD Reviewer",
+      "source": "./prd-reviewer",
+      "description": "Builds a self-contained, static review harness for ONE PRD / design / epic — not the whole repo. Scopes a Markdown browser to a single PRD folder plus the source it references (driven by a referenced-files.txt list in the PRD folder), so a reviewer reads the design and clicks straight through to the real code. Quiet commenting: the panel stays closed until asked for, select text and right-click to comment, and commented passages get an inline marker you can click. Exposes /prd-reviewer.",
+      "author": {
+        "name": "Altien"
+      }
+    },
+    {
       "name": "repository-explorer",
       "displayName": "Repository Explorer",
       "source": "./repository-explorer",

@@ -1,0 +1,8 @@
+{
+  "name": "prd-reviewer",
+  "version": "0.1.0",
+  "description": "Build a self-contained, static review harness for ONE PRD / design / epic: a Markdown browser scoped to a single PRD folder plus the source it references (driven by a referenced-files.txt list in the PRD folder), with a quiet review/commenting layer — the panel stays closed until asked for, select text and right-click to comment, and commented passages get an inline marker you can click. Read the design and click straight through to the real code.",
+  "author": {
+    "name": "Altien"
+  }
+}
