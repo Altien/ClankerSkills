@@ -5,7 +5,7 @@ description: >
   code-verified Architecture & Technology analysis as Markdown + expressive HTML
   with inline-SVG diagrams (and rendered mermaid). Thin alias for the
   repository-explorer skill.
-argument-hint: "[--browse-only] [--no-comments] [target path, default: repo root]"
+argument-hint: "[--browse-only] [--no-comments] [--prd <docs-path>] [target path, default: repo root]"
 ---
 
 Invoke the **repository-explorer** skill to build a Repository Explorer for this
@@ -23,3 +23,7 @@ Arguments: `$ARGUMENTS`
 - `--browse-only`: build just the Markdown documentation browser; skip the
   expensive code-investigation + analysis pages.
 - `--no-comments`: ship a read-only browser (disable the review/commenting layer).
+- `--prd <docs-path>`: **design-doc / PRD review mode** — scope the browser to one
+  document set (the given docs path) plus the source files those docs cite, and
+  frame the analysis as an authored "current → target" design proposal rather than
+  code-verified repo documentation. Lands in place on the current branch.

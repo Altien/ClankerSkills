@@ -5,11 +5,16 @@ description: >
   a browsable Markdown documentation site (file tree, search, faithful GFM
   rendering, rendered mermaid) with an optional review/commenting layer, PLUS a
   code-verified "Architecture & Technology" analysis published as BOTH a Markdown
-  doc and an expressive HTML page with hand-authored inline-SVG diagrams. Use
-  when the user says "build a repository explorer", "make a browsable docs site
-  for this repo", "give me a code-verified architecture overview with diagrams",
-  "help me understand this repo before we edit it", or runs /repository-explorer.
-argument-hint: "[--browse-only] [--no-comments] [--update] [target path, default: repo root]"
+  doc and an expressive HTML page with hand-authored inline-SVG diagrams. Runs in
+  two modes: the default repo-documentation mode, and a design-doc / PRD review
+  mode (--prd) that scopes the browser to one document set plus the source it
+  cites and reframes the analysis page as an authored design proposal rather than
+  code-verified repo documentation. Use when the user says "build a repository
+  explorer", "make a browsable docs site for this repo", "give me a code-verified
+  architecture overview with diagrams", "help me understand this repo before we
+  edit it", "build a review harness for this PRD / design doc", or runs
+  /repository-explorer.
+argument-hint: "[--browse-only] [--no-comments] [--prd <docs-path>] [--update] [target path, default: repo root]"
 ---
 
 # Build a Repository Explorer
@@ -32,6 +37,30 @@ repository** under `docs/repository-explorer/`. It has **two deliverables**:
 Read real files and cite them; never invent architecture, metadata, or
 commentary. No runtime dependencies — the only third-party assets are the
 vendored Markdown renderer and (optional) mermaid in the kit.
+
+### Two modes
+
+- **Repo-documentation (default).** Index every Markdown file across the repo and
+  author the analysis as a *code-verified* description of how the repo is built.
+  Deliverable 2's badge is "✓ Code-verified".
+- **Design-doc / PRD review (`--prd <docs-path>`).** The target isn't "the whole
+  repo" but **one document set** (e.g. a PRD, a design/spec folder, an epic's
+  docs) plus **the source files those docs cite**, so a reviewer reads the design
+  and clicks through to the real code it references. Three things change:
+  1. **Scope** — the manifest indexes only the doc subtree(s) you name (via
+     `INCLUDE_ROOTS` in `build_manifest.py`) plus the cited source (via
+     `INCLUDE_EXTRA_GLOBS`), instead of the entire tree. This keeps a giant
+     monorepo from burying the design under thousands of stray READMEs.
+  2. **Framing** — the home `intro`, `brand`/`tagline`, and `keyDocs` present a
+     **review surface for a design**, not generated repo documentation. Deliverable
+     2 becomes an authored **proposal** — "current → target", badge "Design
+     proposal" — built from the design doc *and* the cited source. It is still
+     grounded in real files (the *current* state is code-verified; the *target* is
+     clearly labelled as proposed), but it is not pitched as "this is how the repo
+     works".
+  3. **Wrap-up** — see Phase 5: an internal design doc lands **in place on the
+     current branch**, not via the third-party fork/PR dance.
+  `--prd` with `--browse-only` ships just the scoped browser (no proposal page).
 
 The engine is repo-agnostic; only **discovery config**, **branding**, and the
 **authored analysis** are per-repo. The kit and the analysis playbook are bundled
@@ -75,6 +104,13 @@ learn what you're documenting. Record:
   `node_modules`, build output) — these become `EXCLUDE_DIRS` /
   `EXCLUDE_PATH_PREFIXES` in `build_manifest.py`.
 
+**Decide the mode.** Default is repo-documentation. If the user passed
+`--prd <docs-path>` (or asks for a review harness around a specific PRD / design /
+epic), switch to design-doc mode: note the doc subtree(s) to index and the source
+files those docs cite (grep the docs for path references) — these become
+`INCLUDE_ROOTS` and `INCLUDE_EXTRA_GLOBS` in Phase 1, and they drive the
+`keyDocs` and the "current → target" proposal page.
+
 **Decide the review layer.** Default is on. If the user passed `--no-comments`
 (or wants a pure read-only site), set `commenting: false`. **Decide scope:**
 default is browse **+** full analysis; `--browse-only` stops after Phase 1.
@@ -88,11 +124,13 @@ default is browse **+** full analysis; `--browse-only` stops after Phase 1.
    repo has no mermaid and want a smaller footprint, you may omit
    `assets/mermaid.min.js` AND delete its `<script>` line in `index.html` — but
    `verify.cjs` asserts the two agree, so do both or neither.
-2. **Adapt `DEST/build_manifest.py`** at its three `ADAPT` blocks:
-   `INCLUDE_EXTRA_*` (canonical non-Markdown specs worth browsing),
-   `EXCLUDE_DIRS`/`EXCLUDE_PATH_PREFIXES` (vendored/generated trees from Phase 0),
-   and `CATEGORY_RULES` (map paths to the repo's vocabulary so the tree + the
-   "Browse by area" grid read well). Run it; check the printed counts.
+2. **Adapt `DEST/build_manifest.py`** at its `ADAPT` blocks:
+   `INCLUDE_ROOTS` (**design-doc mode**: the doc subtree(s) to index, e.g.
+   `{"docs"}` — leave empty for whole-repo documentation mode), `INCLUDE_EXTRA_*`
+   (canonical non-Markdown specs / the **cited source files** in PRD mode, worth
+   browsing), `EXCLUDE_DIRS`/`EXCLUDE_PATH_PREFIXES` (vendored/generated trees from
+   Phase 0), and `CATEGORY_RULES` (map paths to the repo's vocabulary so the tree +
+   the "Browse by area" grid read well). Run it; check the printed counts.
 3. **Brand** — edit only the `window.EXPLORER_CONFIG` block in `DEST/index.html`:
    `brand`, `tagline`, optional `brandMark`/`accent`/`intro`, `commenting`,
    `keyDocs` (the curated "Start here" paths from Phase 0). Leave `analysisPages`
@@ -122,6 +160,13 @@ the docs. Follow `REF/ANALYSIS.md`. In short:
 
 Produce the analysis in **two forms**, per the user's two needs ("MD" and
 "expressive HTML with SVG; diagrams using MD rendered"):
+
+> **Design-doc mode:** title and frame the analysis as the **proposal** the design
+> describes — a "current → target" architecture (badge "Design proposal"), where the
+> *current* mechanism is code-verified against the cited source and the *target* is
+> clearly labelled proposed. Name the Markdown to fit the design (e.g.
+> `proposed-architecture.md` beside the PRD) rather than a repo-wide
+> `ARCHITECTURE-ANALYSIS.md`, and add it to `keyDocs`.
 
 1. **Markdown analysis** — write `<repo>/docs/ARCHITECTURE-ANALYSIS.md` (or fit
    the repo's docs convention). Prose + tables + **mermaid** diagrams for the
@@ -167,26 +212,32 @@ the maintenance rules ("re-run `build_manifest.py` when docs change"; "when the
 architecture moves, update `ARCHITECTURE-ANALYSIS.md` and `architecture.html` and
 re-verify"). Report coverage counts and any doc↔code divergences you found.
 
-Then **commit the explorer on a feature branch and open a pull request back to
-Altien's fork** — this skill documents *other people's* repos, so the work must
-land in Altien's space, never in the original author's repository:
+Then land the work. **Where it lands depends on whose repo this is** — pick the
+right path; do not blindly fork:
 
-1. Stage `docs/repository-explorer/` (including the generated `manifest.json`)
-   together with the authored analysis (`docs/ARCHITECTURE-ANALYSIS.md`); commit
-   with a descriptive message on a feature branch.
-2. Identify the **Altien-owned remote** — the one whose URL is under the `Altien`
-   org (usually `origin`; the third-party original, if present, is typically
-   `upstream` and may be push-disabled). **Never push to `upstream` / the original
-   author's repo.** If no Altien fork exists yet, create one first so the work has
-   somewhere to land: `gh repo fork <original> --org Altien --remote --remote-name origin`.
-3. Push the feature branch to that Altien remote and open the PR against
-   **`altien-main`** — the `main` branch of `Altien/<repo>`:
-   `gh pr create -R Altien/<repo> --base main --fill`.
-4. **Credential note:** an env `GITHUB_TOKEN`/`GH_TOKEN` (often a fine-grained PAT)
+**A. The repo you're already working in (your own / internal — the common case,
+and always so for `--prd` design docs).** The explorer documents work in progress
+in *this* repo, so commit it **in place on the current branch** alongside the docs
+it reviews — no fork, no PR ceremony. Stage `docs/repository-explorer/` (including
+the generated `manifest.json`) together with the authored analysis (the
+`proposed-architecture.md` / `ARCHITECTURE-ANALYSIS.md`), and commit with a
+descriptive message. Match the repo's commit conventions. Only open a PR if the
+repo's workflow requires one for the current branch.
+
+**B. A third-party upstream you must not push to.** Here the work must land in
+**Altien's** space, never the original author's repository:
+
+1. Identify the **Altien-owned remote** (URL under the `Altien` org; usually
+   `origin`). The third-party original, if present, is typically `upstream` and may
+   be push-disabled — **never push to it.** If no Altien fork exists yet:
+   `gh repo fork <original> --org Altien --remote --remote-name origin`.
+2. Push a feature branch to that Altien remote and open the PR against the `main`
+   branch of `Altien/<repo>`: `gh pr create -R Altien/<repo> --base main --fill`.
+3. **Credential note:** an env `GITHUB_TOKEN`/`GH_TOKEN` (often a fine-grained PAT)
    can shadow the broader keyring login and 404 on `gh`'s API even when `git push`
-   succeeds. If `gh` can't resolve the repo, retry with the env token unset so it
-   uses the keyring credential: `env -u GITHUB_TOKEN -u GH_TOKEN gh pr create …`.
-5. Fallback: if you can't push or open the PR (no Altien remote, no access), leave
+   succeeds. If `gh` can't resolve the repo, retry with the env token unset:
+   `env -u GITHUB_TOKEN -u GH_TOKEN gh pr create …`.
+4. Fallback: if you can't push or open the PR (no Altien remote, no access), leave
    the work staged and tell the user the exact commands to run.
 
 ## Incremental updates & the doc-build changelog

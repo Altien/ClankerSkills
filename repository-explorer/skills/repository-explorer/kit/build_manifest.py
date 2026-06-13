@@ -30,6 +30,14 @@ from pathlib import Path
 # Markdown is the primary surface.
 INCLUDE_SUFFIXES = {".md", ".markdown"}
 
+# ADAPT 0 — roots to walk for Markdown. Empty = the whole repo (default,
+# repo-documentation mode). For a focused design-doc / PRD-review build, list the
+# doc subtree(s) to index, e.g. {"docs"} or {"docs/prd/AI-42"}; then add the source
+# files those docs cite via INCLUDE_EXTRA_GLOBS (below) so they're viewable for
+# click-through. Paths are repo-relative, POSIX. INCLUDE_EXTRA_PATHS/GLOBS are
+# always honored regardless of roots, so cited source outside the roots still gets in.
+INCLUDE_ROOTS: set[str] = set()
+
 # ADAPT 1 — extra non-Markdown files worth browsing (rendered as code blocks).
 # Add canonical specs/configs the repo treats as references. Exact repo-relative
 # paths in INCLUDE_EXTRA_PATHS; globs in INCLUDE_EXTRA_GLOBS. Empty by default.
@@ -138,24 +146,39 @@ def extract_summary(lines: list[str], max_len: int = 220) -> str:
 # ---------------------------------------------------------------------------
 # Walk
 # ---------------------------------------------------------------------------
+def _walk_roots() -> list[Path]:
+    """Markdown search roots: the named INCLUDE_ROOTS, or the whole repo if none."""
+    if not INCLUDE_ROOTS:
+        return [REPO_ROOT]
+    roots: list[Path] = []
+    for r in sorted(INCLUDE_ROOTS):
+        p = (REPO_ROOT / r).resolve()
+        if p.is_dir():
+            roots.append(p)
+        else:
+            print(f"  ! INCLUDE_ROOTS entry not a directory, skipped: {r}")
+    return roots or [REPO_ROOT]
+
+
 def iter_candidate_paths() -> list[Path]:
     seen: set[Path] = set()
     out: list[Path] = []
 
-    for path in sorted(REPO_ROOT.rglob("*")):
-        if not path.is_file():
-            continue
-        if any(part in EXCLUDE_DIRS for part in path.parts):
-            continue
-        rel = path.relative_to(REPO_ROOT).as_posix()
-        if any(rel.startswith(p) for p in EXCLUDE_PATH_PREFIXES):
-            continue
-        # Never index the explorer's own output directory.
-        if rel.startswith(OUTPUT.parent.relative_to(REPO_ROOT).as_posix() + "/"):
-            continue
-        if path.suffix.lower() in INCLUDE_SUFFIXES and path not in seen:
-            seen.add(path)
-            out.append(path)
+    for root in _walk_roots():
+        for path in sorted(root.rglob("*")):
+            if not path.is_file():
+                continue
+            if any(part in EXCLUDE_DIRS for part in path.parts):
+                continue
+            rel = path.relative_to(REPO_ROOT).as_posix()
+            if any(rel.startswith(p) for p in EXCLUDE_PATH_PREFIXES):
+                continue
+            # Never index the explorer's own output directory.
+            if rel.startswith(OUTPUT.parent.relative_to(REPO_ROOT).as_posix() + "/"):
+                continue
+            if path.suffix.lower() in INCLUDE_SUFFIXES and path not in seen:
+                seen.add(path)
+                out.append(path)
 
     for extra in INCLUDE_EXTRA_PATHS:
         p = REPO_ROOT / extra
