@@ -1,6 +1,6 @@
 {
   "name": "repository-explorer",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Build a self-contained, static Repository Explorer for any repo: a browsable Markdown documentation site with a file tree, search, and a review/commenting layer, plus a code-verified Architecture & Technology analysis published as both Markdown and expressive HTML with hand-authored inline-SVG diagrams (and rendered mermaid). Browse the docs, then read an honest, source-linked walkthrough of how the system actually fits together.",
   "author": {
     "name": "Altien"

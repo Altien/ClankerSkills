@@ -172,6 +172,12 @@
         m.files.forEach(function (f) {
           state.byPath[f.path] = f;
         });
+        // Collapse the tree by default on first visit (no stored state yet);
+        // user toggles and the Collapse/Expand-all buttons persist thereafter.
+        if (localStorage.getItem(LS_COLLAPSED) === null) {
+          setCollapsed(allDirPaths());
+        }
+        initTreeToolbar();
         buildTree();
         renderReviewCount();
         route();
@@ -197,6 +203,61 @@
   }
   function setCollapsed(map) {
     localStorage.setItem(LS_COLLAPSED, JSON.stringify(map));
+  }
+
+  // Every directory path in the manifest — used by collapse-all and by the
+  // collapsed-by-default first load (the fully-expanded tree is too noisy).
+  function allDirPaths() {
+    var dirs = {};
+    (state.manifest ? state.manifest.files : []).forEach(function (file) {
+      var parts = file.path.split("/");
+      for (var i = 0; i < parts.length - 1; i++) {
+        dirs[parts.slice(0, i + 1).join("/")] = 1;
+      }
+    });
+    return dirs;
+  }
+
+  function collapseAll() {
+    setCollapsed(allDirPaths());
+    buildTree(el.search.value);
+  }
+
+  function expandAll() {
+    setCollapsed({});
+    buildTree(el.search.value);
+  }
+
+  // Inject the Collapse-all / Expand-all toolbar above the tree. Done from JS so
+  // the per-repo index.html needs no change to gain the buttons.
+  function initTreeToolbar() {
+    if (!el.tree || document.getElementById("tree-toolbar")) return;
+    var bar = document.createElement("div");
+    bar.className = "tree-toolbar";
+    bar.id = "tree-toolbar";
+    [["Collapse all", collapseAll], ["Expand all", expandAll]].forEach(function (pair) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "tree-toolbtn";
+      b.textContent = pair[0];
+      b.addEventListener("click", pair[1]);
+      bar.appendChild(b);
+    });
+    el.tree.parentNode.insertBefore(bar, el.tree);
+  }
+
+  // Resolve a document's URL. Served locally → the real file from the checkout
+  // (REPO_ROOT, e.g. "../../"); on cloud → the commit-pinned upstream supplied by
+  // the manifest's docCloudBase. Same static bundle works in both places, and
+  // binary docs are never re-hosted. (Mirrors the data-explorer's DOC_PIN.)
+  function isLocalHost() {
+    var h = location.hostname;
+    return location.protocol === "file:" || h === "localhost" || h === "127.0.0.1" ||
+      h === "::1" || h === "" || /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(h);
+  }
+  function docHref(p) {
+    var base = isLocalHost() ? REPO_ROOT : ((state.manifest && state.manifest.docCloudBase) || REPO_ROOT);
+    return base + p;
   }
 
   function buildTree(filter) {
@@ -291,10 +352,25 @@
 
   function renderTreeFile(file) {
     var a = document.createElement("a");
+    var name = file.path.split("/").pop();
+    if (file.type === "binary") {
+      // Binary document (Word/PDF/etc): link to the source file — the local
+      // checkout when served locally, the commit-pinned upstream on cloud. Never
+      // fetched, rendered, or re-hosted in the published bundle.
+      a.className = "tree-file binary";
+      a.href = docHref(file.path);
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.title = file.path + " — opens the source document";
+      a.innerHTML =
+        '<span class="doticon">📎</span><span class="fname">' +
+        esc(name) +
+        '</span><span class="ext-link">↗</span>';
+      return a;
+    }
     a.className = "tree-file";
     a.href = "#/" + file.path;
     a.dataset.path = file.path;
-    var name = file.path.split("/").pop();
     var cc = commentCountFor(file.path);
     a.innerHTML =
       '<span class="doticon">' +
@@ -500,6 +576,16 @@
     highlightActive();
     var file = state.byPath[path];
     renderCrumbs(path);
+    if (file && file.type === "binary") {
+      // Deep-link/card route to a binary: don't fetch — point at the source document.
+      el.doc.innerHTML =
+        '<div class="doc-inner"><div class="doc-body"><h1>' +
+        esc(path.split("/").pop()) +
+        '</h1><p class="binary-note">Binary document — not rendered in the browser. ' +
+        '<a href="' + esc(docHref(path)) + '" target="_blank" rel="noopener">Open the source document ↗</a></p></div></div>';
+      el.doc.scrollTop = 0;
+      return;
+    }
     el.doc.innerHTML = '<div class="doc-inner"><div class="loading">Loading…</div></div>';
 
     fetch(REPO_ROOT + path, { cache: "no-cache" })
@@ -550,8 +636,17 @@
     if (file.type === "markdown") {
       marked.setOptions({ gfm: true, breaks: false, headerIds: false, mangle: false });
       html = marked.parse(text);
+    } else if (file.type === "html") {
+      // HTML doc/template: render in a sandboxed iframe (no scripts/same-origin)
+      // so its own styles can't leak into or break the explorer. A "view source"
+      // link (local file, or commit-pinned upstream on cloud) stays one click away.
+      var cap =
+        '<div class="html-cap">Rendered HTML preview · ' +
+        '<a href="' + esc(docHref(path)) + '" target="_blank" rel="noopener">view source ↗</a>' +
+        "</div>";
+      html = cap + '<iframe class="html-frame" sandbox srcdoc="' + esc(text) + '"></iframe>';
     } else {
-      // Non-markdown (yaml etc): render as a single code block.
+      // Other non-markdown (yaml etc): render as a single code block.
       html = "<pre><code>" + esc(text) + "</code></pre>";
     }
 
