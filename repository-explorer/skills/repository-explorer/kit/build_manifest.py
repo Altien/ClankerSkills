@@ -58,10 +58,11 @@ INCLUDE_EXTRA_GLOBS: list[str] = []
 # COMMIT-PINNED base so links open the real bytes and never rot, e.g.
 # "https://raw.githubusercontent.com/<org>/<repo>/<commit>/".
 DOC_CLOUD_BASE = ""
+# Documents only — the link-don't-rehost case. Images are intentionally excluded:
+# they're usually inline-embedded and ARE re-hosted, so listing them as source
+# links would both duplicate them and bury the real documents in icon noise.
 BINARY_SUFFIXES = {
     ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".pdf",
-    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg",
-    ".zip", ".csv",
 }
 
 # ADAPT 1c — cloud-path remap for a dev mirror that reorganized files away from the
@@ -219,7 +220,13 @@ def iter_candidate_paths() -> list[Path]:
             if rel.startswith(SIBLING_ISLAND_DIRS):
                 continue
             viewable = INCLUDE_SUFFIXES | (HTML_SUFFIXES if INCLUDE_HTML else set())
-            if path.suffix.lower() in viewable and path not in seen:
+            suf = path.suffix.lower()
+            # An index.html is a site/app shell (Vite/SPA entry), not a prose
+            # document — skip it. A genuine HTML doc named index.html can still be
+            # forced in via INCLUDE_EXTRA_PATHS.
+            if suf in HTML_SUFFIXES and path.name.lower() == "index.html":
+                continue
+            if suf in viewable and path not in seen:
                 seen.add(path)
                 out.append(path)
 
