@@ -64,6 +64,12 @@ BINARY_SUFFIXES = {
     ".zip", ".csv",
 }
 
+# ADAPT 1c — cloud-path remap for a dev mirror that reorganized files away from the
+# upstream layout. Maps a repo-relative LOCAL path -> the repo-relative UPSTREAM path,
+# used only for the cloud link (DOC_CLOUD_BASE + upstream path). Local serving still
+# uses the real local path, so the file opens both places. Empty by default.
+DOC_PATH_REMAP: dict[str, str] = {}
+
 # ADAPT 2 — directories never to walk (VCS, build output, vendored trees).
 EXCLUDE_DIRS = {
     ".git", "node_modules", ".svelte-kit", "dist", "build", "out",
@@ -269,7 +275,7 @@ def build() -> dict:
         else:
             title = rel.rsplit("/", 1)[-1]
             summary = f"{(path.suffix.lstrip('.') or 'config')} reference."
-        files.append({
+        entry = {
             "path": rel,
             "title": title,
             "summary": summary,
@@ -277,12 +283,15 @@ def build() -> dict:
             "lines": len(lines),
             "category": categorize(rel),
             "type": "markdown" if is_markdown else ("html" if is_html else (path.suffix.lstrip(".") or path.name.lower())),
-        })
+        }
+        if rel in DOC_PATH_REMAP:
+            entry["cloudPath"] = DOC_PATH_REMAP[rel]
+        files.append(entry)
 
     for path in iter_binary_paths():
         rel = path.relative_to(REPO_ROOT).as_posix()
         ext = (path.suffix.lstrip(".") or "file").lower()
-        files.append({
+        entry = {
             "path": rel,
             "title": rel.rsplit("/", 1)[-1],
             "summary": f"{ext.upper()} document — opens the source file.",
@@ -290,7 +299,10 @@ def build() -> dict:
             "lines": 0,
             "category": categorize(rel),
             "type": "binary",
-        })
+        }
+        if rel in DOC_PATH_REMAP:
+            entry["cloudPath"] = DOC_PATH_REMAP[rel]
+        files.append(entry)
 
     files.sort(key=lambda f: f["path"])
     return {

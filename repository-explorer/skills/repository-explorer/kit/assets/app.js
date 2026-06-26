@@ -256,8 +256,12 @@
       h === "::1" || h === "" || /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(h);
   }
   function docHref(p) {
-    var base = isLocalHost() ? REPO_ROOT : ((state.manifest && state.manifest.docCloudBase) || REPO_ROOT);
-    return base + p;
+    if (isLocalHost()) return REPO_ROOT + p;
+    var base = (state.manifest && state.manifest.docCloudBase) || REPO_ROOT;
+    // A dev mirror may have moved a file to a path that doesn't exist upstream;
+    // cloudPath (when set) is the upstream path used only for the cloud link.
+    var f = state.byPath && state.byPath[p];
+    return base + ((f && f.cloudPath) || p);
   }
 
   function buildTree(filter) {
