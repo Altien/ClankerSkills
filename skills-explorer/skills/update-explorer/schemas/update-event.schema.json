@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altien.com/schemas/skills-explorer/update-event-1.0.json",
+  "title": "Skills Explorer Update Event",
+  "type": "object",
+  "required": [
+    "schema_version", "sequence", "event_id", "event_sha256", "head_commit",
+    "added", "updated", "restored", "historical", "unchanged_count", "summary",
+    "verification_sha256", "curation_reviewed_unchanged", "coverage_changed",
+    "coverage_change_accepted", "coverage_after_sha256", "bundle_after_sha256",
+    "stale_curated"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "sequence": {"type": "integer", "minimum": 1},
+    "previous_event_sha256": {"type": ["string", "null"]},
+    "event_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "event_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "base_commit": {"type": ["string", "null"]},
+    "head_commit": {"type": "string"},
+    "added": {"type": "array"},
+    "updated": {"type": "array"},
+    "restored": {"type": "array"},
+    "historical": {"type": "array"},
+    "unchanged_count": {"type": "integer", "minimum": 0},
+    "curation_reviewed_unchanged": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "coverage_changed": {"type": "boolean"},
+    "coverage_change_accepted": {"type": "boolean"},
+    "coverage_before_sha256": {"type": ["string", "null"]},
+    "coverage_after_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "bundle_before_sha256": {"type": ["string", "null"]},
+    "bundle_after_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "stale_curated": {"type": "array", "items": {"type": "string"}},
+    "summary": {"type": "string", "minLength": 1},
+    "verification_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

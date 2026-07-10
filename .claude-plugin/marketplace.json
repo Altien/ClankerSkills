@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "clanker-skills",
-  "description": "Reusable Claude Code tooling for understanding other repositories. Ships the Skills & Prompts Explorer: a build-explorer skill that discovers every skill, agent, and prompt in any repo and generates a self-contained, browsable static site with assessment cards and clickable, source-linked workflow diagrams.",
+  "description": "Reusable Claude Code tooling for understanding other repositories. Ships a repository-owned Skills & Prompts Explorer with polyglot discovery, exact pre-extracted bodies, verified catalog bundles, historical retention, and auditable updates.",
   "owner": {
     "name": "Altien"
   },
@@ -19,7 +19,7 @@
       "name": "skills-explorer",
       "displayName": "Skills & Prompts Explorer",
       "source": "./skills-explorer",
-      "description": "Discovers every skill, agent, prompt-template, system-prompt, and instruction doc in a repository and builds a self-contained, dependency-light static explorer: each artifact gets a structured assessment card, a programmatic-surface panel (tool grants, MCP servers, invocation mode, bundled resources), and a generated workflow diagram whose steps slice their verbatim source section.",
+      "description": "Builds and updates a repository-owned Skills & Prompts Explorer. Polyglot discovery extracts exact bodies in the source repo; verified bundles carry immutable provenance, preserve removed artifacts as history, and append hash-chained update reports for downstream consumers.",
       "author": {
         "name": "Altien"
       }
