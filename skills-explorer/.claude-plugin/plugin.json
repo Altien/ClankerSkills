@@ -1,6 +1,6 @@
 {
   "name": "skills-explorer",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Builds and updates repository-owned Skills & Prompts Explorers with polyglot embedded-prompt discovery, exact pre-extracted bodies, assessments and workflows, immutable Git provenance, historical retention, verified catalog bundles, and hash-chained update logs.",
   "author": {
     "name": "Altien"

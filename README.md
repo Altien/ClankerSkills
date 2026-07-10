@@ -96,13 +96,15 @@ repo inherits it.
 - `adopt-repo` v0.1.0 — the orchestrator. Sequences `private-mirror` →
   `fork-trunk` → vendor explorers + push → cloud island build (paused handoff) →
   `rescan-docs`. First built to onboard `thepranky/cr_oss` as `Altien/cr_oss-dev`.
-- `skills-explorer` v0.3.0 — first built for and proven on a 13-plugin legal
+- `skills-explorer` v0.3.1 — first built for and proven on a 13-plugin legal
   marketplace (206 artifacts, 191 curated graphs, 37k+ structural checks); also
   run on a ~250-doc legal-AI platform (23 artifacts incl. 8 in-code system
   prompts). v0.3.0 adds polyglot literal discovery (including Go), exact
   repository-owned extraction, verified catalog bundles, immutable source
   provenance, historical retention, and `/update-explorer` with hash-chained
-  machine reports. Explorer commits remain local until a PR is explicitly approved.
+  machine reports. v0.3.1 adds a bounded `model: haiku` update worker while keeping
+  coverage, curation, quality, historical-retention, and publication decisions in the primary
+  model. Explorer commits remain local until a PR is explicitly approved.
 - `repository-explorer` v0.1.0.
 - `atlas-explorer` v0.2.1 — engine proven on a ~140K-LOC repo (110 docs bound to
   its code) and a second ~250-doc repo; ships a 128-test engine suite (passes

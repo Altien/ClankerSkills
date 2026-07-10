@@ -16,6 +16,19 @@ Let `SELF = ${CLAUDE_PLUGIN_ROOT}/skills/update-explorer`,
 `BUILD = ${CLAUDE_PLUGIN_ROOT}/skills/build-explorer`, and
 `DEST = <target repository>/docs/explorer`.
 
+## Model delegation boundary
+
+Delegate bounded command execution to `explorer-update-worker`, which is configured with
+`model: haiku`. Use it for mechanical preflight, build/assemble/verify/plan commands, an exact
+parent-approved publish command, and deterministic import execution. Give it one repository,
+one phase, and exact arguments; require its structured JSON result.
+
+Keep all judgment in the primary model: discovery-adapter changes, dirty-tree handling, coverage
+acceptance, curation, quality assessment, historical/removal review, publish summaries, commit
+scope, and import approval. The worker may not choose `--accept-coverage-change` or
+`--reviewed-unchanged`; the primary must supply those exact flags after review. If model routing is
+unavailable, say so rather than claiming that an ordinary subagent is the smaller worker.
+
 ## 1. Preflight and baseline
 
 Work from the source repository, on a feature branch. For a v0.3+ Explorer, read:
@@ -83,8 +96,9 @@ requirements but publication enforces them.
 - Describe questionable source quality honestly. Do not silently improve, endorse, or
   discard a weak skill (for example, one with shallow or unsafe instructions).
 
-For large deltas, delegate bounded artifact reviews to subagents and integrate their JSON
-fragments only after source-grounding and validation checks pass.
+For large deltas, delegate bounded artifact reviews separately and integrate their JSON fragments
+only after source-grounding and validation checks pass. Do not use the mechanical Haiku worker for
+authored quality judgments.
 
 After editing any `data/*.json`, rerun:
 
