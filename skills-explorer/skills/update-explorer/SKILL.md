@@ -21,7 +21,7 @@ Let `SELF = ${CLAUDE_PLUGIN_ROOT}/skills/update-explorer`,
 Delegate bounded command execution to `explorer-update-worker`, which is configured with
 `model: haiku`. Use it for mechanical preflight, build/assemble/verify/plan commands, an exact
 parent-approved publish command, and deterministic import execution. Give it one repository,
-one phase, and exact arguments; require its structured JSON result.
+one phase, exact arguments, and an exact changed-file allowlist; require its structured JSON result.
 
 Keep all judgment in the primary model: discovery-adapter changes, dirty-tree handling, coverage
 acceptance, curation, quality assessment, historical/removal review, publish summaries, commit

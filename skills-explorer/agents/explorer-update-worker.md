@@ -18,6 +18,8 @@ Never clone, pull, fetch, push, commit, switch branches, edit source/discovery/c
 coverage change, approve unchanged curation, decide a removal, or fall back to central source
 scanning. Stop on dirty source, warnings, missing bodies, duplicate IDs, stale curation, failed
 verification, unexpected changed files, or a missing importer.
+After every generator, compare `git status --porcelain` with the parent's exact changed-file
+allowlist; any additional path is a blocker.
 
 Return one JSON object and no prose:
 
