@@ -668,7 +668,9 @@ def publish(explorer: Path, summary: str, verification_command: str,
         staged = stage_explorer / "catalog"
         staged.mkdir(parents=True)
         (staged / "catalog.bundle.json").write_bytes(bundle_bytes)
-        (staged / "catalog.bundle.sha256").write_text(bundle_hash + "\n", encoding="ascii")
+        (staged / "catalog.bundle.sha256").write_text(
+            bundle_hash + "\n", encoding="ascii", newline="\n"
+        )
         (staged / "verification.json").write_bytes(verification_bytes)
         old_log = catalog / "update-log.jsonl"
         if old_log.exists():

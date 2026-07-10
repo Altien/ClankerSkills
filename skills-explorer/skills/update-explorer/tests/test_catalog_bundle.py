@@ -123,6 +123,9 @@ class CatalogBundleTests(unittest.TestCase):
 
         changes = self.catalog.publish(self.explorer, "Initial verified extraction.", self.verification_command())
         self.assertEqual([item["id"] for item in changes["added"]], ["a", "b"])
+        checksum_bytes = (self.explorer / "catalog" / "catalog.bundle.sha256").read_bytes()
+        self.assertTrue(checksum_bytes.endswith(b"\n"))
+        self.assertNotIn(b"\r\n", checksum_bytes)
         first_bundle_bytes = (self.explorer / "catalog" / "catalog.bundle.json").read_bytes()
         first_bundle = json.loads(first_bundle_bytes)
         first_items = {item["id"]: item for item in first_bundle["artifacts"]}
