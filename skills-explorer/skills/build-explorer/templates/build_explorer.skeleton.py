@@ -871,7 +871,8 @@ def parse_registry():
 def git_output(*args):
     try:
         return subprocess.check_output(
-            ["git", "-C", REPO, *args], text=True, stderr=subprocess.DEVNULL
+            ["git", "-C", REPO, *args], text=True, encoding="utf-8",
+            stderr=subprocess.DEVNULL
         ).strip()
     except Exception:
         return ""

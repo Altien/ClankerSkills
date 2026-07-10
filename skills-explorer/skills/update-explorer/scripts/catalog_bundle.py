@@ -50,7 +50,8 @@ def read_json(path: Path, required: bool = True) -> dict:
 
 def git(repo: Path, *args: str, required: bool = True) -> str:
     proc = subprocess.run(
-        ["git", "-C", str(repo), *args], capture_output=True, text=True
+        ["git", "-C", str(repo), *args], capture_output=True, text=True,
+        encoding="utf-8",
     )
     if proc.returncode and required:
         raise CatalogError(proc.stderr.strip() or f"git {' '.join(args)} failed")
@@ -59,7 +60,8 @@ def git(repo: Path, *args: str, required: bool = True) -> str:
 
 def git_succeeds(repo: Path, *args: str) -> bool:
     return subprocess.run(
-        ["git", "-C", str(repo), *args], capture_output=True, text=True
+        ["git", "-C", str(repo), *args], capture_output=True, text=True,
+        encoding="utf-8",
     ).returncode == 0
 
 
@@ -387,7 +389,9 @@ def assemble_bundle(explorer: Path, reviewed_unchanged: set[str] | None = None,
 
 
 def run_verification(repo: Path, command: str) -> dict:
-    proc = subprocess.run(command, cwd=repo, shell=True, text=True, capture_output=True)
+    proc = subprocess.run(
+        command, cwd=repo, shell=True, text=True, capture_output=True, encoding="utf-8"
+    )
     if proc.returncode:
         raise CatalogError(
             f"Explorer verification failed ({command}):\n{proc.stdout}\n{proc.stderr}".strip()

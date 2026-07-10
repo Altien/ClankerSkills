@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "catalog_bundle.py"
@@ -23,7 +24,8 @@ def load_catalog_module():
 
 def run(repo: Path, *args: str) -> str:
     proc = subprocess.run(
-        [*args], cwd=repo, text=True, capture_output=True, check=True
+        [*args], cwd=repo, text=True, capture_output=True, check=True,
+        encoding="utf-8",
     )
     return proc.stdout.strip()
 
@@ -52,6 +54,15 @@ class CatalogBundleTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temp.cleanup()
+
+    def test_text_subprocesses_force_utf8(self) -> None:
+        completed = mock.Mock(returncode=0, stdout="法務-é\n", stderr="")
+        with mock.patch.object(self.catalog.subprocess, "run", return_value=completed) as run_mock:
+            self.assertEqual(self.catalog.git(self.repo, "status", "--short"), "法務-é")
+            self.assertEqual(run_mock.call_args.kwargs["encoding"], "utf-8")
+
+            self.assertTrue(self.catalog.git_succeeds(self.repo, "rev-parse", "HEAD"))
+            self.assertEqual(run_mock.call_args.kwargs["encoding"], "utf-8")
 
     def commit(self, message: str) -> str:
         run(self.repo, "git", "add", ".")
