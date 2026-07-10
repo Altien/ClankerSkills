@@ -190,7 +190,9 @@ class CatalogBundleTests(unittest.TestCase):
             {"id": "prompt", "source_path": "src/prompt.go", "content": exported_body}
         ], head)
 
-        with self.assertRaisesRegex(self.catalog.CatalogError, "cannot be reproduced"):
+        with self.assertRaisesRegex(
+            self.catalog.CatalogError, "artifact prompt:.*cannot be reproduced"
+        ):
             self.catalog.assemble_bundle(self.explorer)
 
         escaped_source = b'const SYSTEM_PROMPT = "Line one.\\nReturn \\"verified\\" caf\\u00e9.";'

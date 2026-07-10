@@ -291,9 +291,12 @@ def assemble_bundle(explorer: Path, reviewed_unchanged: set[str] | None = None,
             raise CatalogError(f"artifact {artifact_id} has no immutable source location")
         blob = source_blob(repo, content_commit, source["path"])
         source["source_blob_sha256"] = sha256_bytes(blob)
-        source["content_binding"] = bind_content_to_source(
-            blob, content, source["line_start"], source["line_end"]
-        )
+        try:
+            source["content_binding"] = bind_content_to_source(
+                blob, content, source["line_start"], source["line_end"]
+            )
+        except CatalogError as exc:
+            raise CatalogError(f"artifact {artifact_id}: {exc}") from exc
         supplied_curated = curated.get(artifact_id)
         current_curated = copy.deepcopy(
             supplied_curated if supplied_curated is not None
