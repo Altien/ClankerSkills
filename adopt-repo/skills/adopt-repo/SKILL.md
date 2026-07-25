@@ -40,7 +40,7 @@ the cloud build before registration.
   `fork-trunk`, `repository-explorer`, `skills-explorer`, `atlas-explorer`. If any
   is missing, stop and ask the user to `claude plugin install <name>@clanker-skills`
   and restart.
-- The `rescan-docs` workspace skill (lives in `C:\Data\Projects\Mike\.claude`).
+- The `rescan-docs` workspace skill (lives in `C:\Data\Projects\Mike\MikeForxExplorer\.claude\skills\rescan-docs` — inside the launcher repo, not the workspace root).
 - `gh auth status` works with `repo` + admin scope on the destination org.
 
 ## Inputs & derivation
