@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altien.com/schemas/skills-explorer/catalog-bundle-1.0.json",
+  "title": "Skills Explorer Catalog Bundle",
+  "type": "object",
+  "required": ["schema_version", "repository", "observed_at_commit", "generator", "coverage", "artifacts"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "repository": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string"},
+        "url": {"type": ["string", "null"]},
+        "default_branch": {"type": ["string", "null"]}
+      }
+    },
+    "observed_at_commit": {"type": "string", "pattern": "^[0-9a-f]{40,64}$"},
+    "observed_at": {"type": "string"},
+    "generator": {"type": "object"},
+    "coverage": {"type": "object"},
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "content", "content_sha256", "source", "lifecycle", "mechanical", "curated"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "kind": {"type": ["string", "null"]},
+          "content": {"type": "string"},
+          "content_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "source": {
+            "type": "object",
+            "required": ["path", "content_commit", "last_seen_commit", "observed_at_commit", "source_blob_sha256", "content_binding", "immutable_url"],
+            "properties": {
+              "content_commit": {"type": "string"},
+              "last_seen_commit": {"type": "string"},
+              "observed_at_commit": {"type": "string"},
+              "immutable_url": {"type": "string"},
+              "source_blob_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "content_binding": {"enum": ["verbatim", "json-string", "json-string-ascii", "csharp-verbatim"]}
+            }
+          },
+          "lifecycle": {
+            "type": "object",
+            "required": ["status"],
+            "properties": {"status": {"enum": ["active", "historical"]}}
+          },
+          "mechanical": {"type": "object"},
+          "curated": {"type": "object"}
+        }
+      }
+    }
+  }
+}

@@ -19,7 +19,7 @@ you want and the skill auto-triggers.
 | Plugin | Command | What it builds |
 |--------|---------|----------------|
 | **Adopt Repo** (`adopt-repo`) | `/adopt-repo` | The front-runner. Onboards an upstream OSS repo into the dev workspace end to end — private `<name>-dev` mirror → `altien-main` development trunk → vendors the explorer skills into the repo and pushes them → **pauses** so Claude in the cloud can build the documentation islands → pulls them back and registers them on the docs launcher. A sequencer over the four plugins below plus `rescan-docs`. |
-| **Skills & Prompts Explorer** (`skills-explorer`) | `/build-explorer` | A dependency-light **static** site documenting every skill, agent, prompt-template, system-prompt, and instruction doc in the repo — each with an assessment card, a programmatic-surface panel (tool grants, MCP servers, invocation mode, bundled resources), and a workflow diagram whose steps slice their verbatim source. |
+| **Skills & Prompts Explorer** (`skills-explorer`) | `/build-explorer`, `/update-explorer` | A dependency-light **static** site plus a repository-owned catalog. Polyglot discovery pre-extracts exact skill/prompt bodies in the source repo; verified bundles preserve removals as history, pin provenance to immutable commits, and carry a hash-chained update log. |
 | **Repository Explorer** (`repository-explorer`) | `/repository-explorer` | A **static** browsable Markdown documentation site (file tree, search, rendered mermaid, optional review/commenting) **plus** a code-verified "Architecture & Technology" analysis published as both Markdown and an expressive HTML page with hand-authored inline-SVG diagrams. |
 | **The Atlas** (`atlas-explorer`) | `/build-atlas` | A **live FastAPI** documentation navigator that binds every markdown doc to the code it describes: doc↔code 50/50 views, tree-sitter symbol slicing with fold regions, SQLite FTS5 search, live drift detection, authored journeys + clickable SVG diagrams, and anchored feedback with clipboard agent-brief export. |
 | **Private Mirror** (`private-mirror`) | `/mirror-repo` | Sets up the current empty directory as a **private mirror** of a public GitHub repo — pull upstream updates, but pushes to upstream are physically disabled and Actions are turned off before the first push. |
@@ -50,7 +50,9 @@ copy-verbatim engine you lift into a target repo. See each plugin's `SKILL.md`.
 .claude-plugin/marketplace.json     # marketplace manifest (lists all plugins)
 
 adopt-repo/             commands/adopt-repo.md           skills/adopt-repo/SKILL.md   # the orchestrator
-skills-explorer/        commands/build-explorer.md       skills/build-explorer/{SKILL.md, kit/, templates/, reference/, examples/}
+skills-explorer/        commands/{build,update}-explorer.md
+                        skills/build-explorer/{SKILL.md, kit/, templates/, reference/, examples/}
+                        skills/update-explorer/{SKILL.md, scripts/, schemas/, references/}
 repository-explorer/    commands/repository-explorer.md  skills/repository-explorer/{SKILL.md, kit/, reference/, examples/}
 atlas-explorer/         commands/build-atlas.md          skills/atlas-explorer/{SKILL.md, kit/, reference/, templates/, examples/}
 private-mirror/         commands/mirror-repo.md          skills/...
@@ -73,6 +75,12 @@ Across the explorer plugins, the same discipline holds:
 - **Mechanical and authored content are separate sources, merged by id.**
   Regenerating the mechanical index (a manifest, or The Atlas's live reindex)
   never clobbers authored graphs, summaries, or comments.
+- **Extraction belongs in the source repository.** Skills & Prompts Explorers
+  publish exact bodies in a verified bundle; downstream directories consume the
+  bundle and do not rediscover prompts from arbitrary source code.
+- **Absence is history, not a deletion command.** A skill or prompt missing from
+  a later scan remains in the catalog as historical, linked to its last content
+  commit.
 - **Authored prose is written after reading the source, never extracted.**
   Templated or "see the source" filler is a defect.
 - **Honesty over polish.** Claims are verified against code; The Atlas goes
@@ -88,11 +96,15 @@ repo inherits it.
 - `adopt-repo` v0.1.0 — the orchestrator. Sequences `private-mirror` →
   `fork-trunk` → vendor explorers + push → cloud island build (paused handoff) →
   `rescan-docs`. First built to onboard `thepranky/cr_oss` as `Altien/cr_oss-dev`.
-- `skills-explorer` v0.2.1 — first built for and proven on a 13-plugin legal
+- `skills-explorer` v0.3.1 — first built for and proven on a 13-plugin legal
   marketplace (206 artifacts, 191 curated graphs, 37k+ structural checks); also
   run on a ~250-doc legal-AI platform (23 artifacts incl. 8 in-code system
-  prompts). v0.2.1: auto-commits the explorer once verify.cjs is green (PRs still
-  need explicit confirmation).
+  prompts). v0.3.0 adds polyglot literal discovery (including Go), exact
+  repository-owned extraction, verified catalog bundles, immutable source
+  provenance, historical retention, and `/update-explorer` with hash-chained
+  machine reports. v0.3.1 adds a bounded `model: haiku` update worker while keeping
+  coverage, curation, quality, historical-retention, and publication decisions in the primary
+  model. Explorer commits remain local until a PR is explicitly approved.
 - `repository-explorer` v0.1.0.
 - `atlas-explorer` v0.2.1 — engine proven on a ~140K-LOC repo (110 docs bound to
   its code) and a second ~250-doc repo; ships a 128-test engine suite (passes

@@ -354,6 +354,18 @@
     return n;
   }
 
+  var ASSET_ICONS = {
+    pdf: "📕", docx: "📘", doc: "📘", xlsx: "📗", xls: "📗",
+    pptx: "📙", ppt: "📙", csv: "📗", zip: "🗜",
+    png: "🖼", jpg: "🖼", jpeg: "🖼", gif: "🖼", svg: "🖼", webp: "🖼",
+  };
+
+  function fileIcon(file) {
+    if (file.type === "markdown") return "📄";
+    if (file.type === "asset") return ASSET_ICONS[file.ext] || "📎";
+    return "⚙";
+  }
+
   function renderTreeFile(file) {
     var a = document.createElement("a");
     var name = file.path.split("/").pop();
@@ -378,7 +390,7 @@
     var cc = commentCountFor(file.path);
     a.innerHTML =
       '<span class="doticon">' +
-      (file.type === "markdown" ? "📄" : "⚙") +
+      fileIcon(file) +
       '</span><span class="fname">' +
       esc(name) +
       "</span>" +
@@ -409,6 +421,16 @@
     if (hi >= 0) {
       inHash = path.slice(hi + 1);
       path = path.slice(0, hi);
+    }
+    // Browsers percent-encode the fragment, so a path containing spaces or other
+    // reserved characters arrives here escaped and won't match the manifest key.
+    // Try the raw form first (a path may legitimately contain a literal '%'),
+    // then the decoded one.
+    if (!state.byPath[path]) {
+      try {
+        var decoded = decodeURIComponent(path);
+        if (state.byPath[decoded]) path = decoded;
+      } catch (e) { /* malformed escape — keep the raw path and fall through */ }
     }
     if (state.byPath[path]) openFile(path, inHash);
     else renderHome();
@@ -592,6 +614,13 @@
     }
     el.doc.innerHTML = '<div class="doc-inner"><div class="loading">Loading…</div></div>';
 
+    // Binary documents are never fetched as text — that would pull megabytes and
+    // render mojibake. Show a document card with a raw link instead.
+    if (file && file.type === "asset") {
+      renderAsset(path, file);
+      return;
+    }
+
     fetch(REPO_ROOT + path, { cache: "no-cache" })
       .then(function (r) {
         if (!r.ok) throw new Error("HTTP " + r.status);
@@ -665,6 +694,60 @@
 
     el.doc.innerHTML = "";
     el.doc.appendChild(wrap);
+
+    if (COMMENTING) openComments(path);
+    else el.comments.hidden = true;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Binary documents (PDF / Office / images) — a document card, never a text
+  // render. The file is linked and previewed where it already lives in the repo;
+  // nothing is copied or converted.
+  // ---------------------------------------------------------------------------
+  function assetRow(k, v) {
+    return "<tr><th>" + esc(k) + "</th><td>" + v + "</td></tr>";
+  }
+
+  function renderAsset(path, file) {
+    // encodeURI keeps "/" but escapes spaces, which asset paths often contain.
+    var href = REPO_ROOT + encodeURI(path);
+    var name = path.split("/").pop();
+    var dir = path.split("/").slice(0, -1).join("/");
+    var kind = (file.ext || "file").toUpperCase();
+    var isImage = /^(png|jpe?g|gif|svg|webp)$/.test(file.ext || "");
+
+    var html =
+      "<h1>" + fileIcon(file) + " " + esc(name) + "</h1>" +
+      "<table><tbody>" +
+      assetRow("Folder", dir ? "<code>" + esc(dir) + "</code>" : "—") +
+      assetRow("Type", esc(kind) + " document") +
+      assetRow("Size", fmtBytes(file.size)) +
+      assetRow("Original", '<a href="' + href + '" target="_blank" rel="noopener">open ↗</a>') +
+      "</tbody></table>";
+
+    if (file.inline && isImage) {
+      html +=
+        '<p><img src="' + href + '" alt="' + esc(name) +
+        '" style="max-width:100%;border:1px solid var(--border);border-radius:8px" /></p>';
+    } else if (file.inline) {
+      html +=
+        '<embed src="' + href + '" type="application/pdf" ' +
+        'style="width:100%;height:78vh;border:1px solid var(--border);border-radius:8px;background:var(--bg-soft)" />' +
+        '<p><em>Served straight from <code>' + esc(path) + '</code> in this repository — not a copy. ' +
+        'A scanned PDF will render as page images, so text search inside it finds nothing.</em></p>';
+    } else {
+      html +=
+        '<p class="banner">Browsers cannot display <strong>' + esc(kind) +
+        "</strong> inline. <a href=\"" + href + '" target="_blank" rel="noopener">Opening it</a> ' +
+        "downloads the original file from the repository.</p>";
+    }
+
+    var wrap = document.createElement("div");
+    wrap.className = "doc-inner";
+    wrap.innerHTML = html;
+    el.doc.innerHTML = "";
+    el.doc.appendChild(wrap);
+    el.doc.scrollTop = 0;
 
     if (COMMENTING) openComments(path);
     else el.comments.hidden = true;

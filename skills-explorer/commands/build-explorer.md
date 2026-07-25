@@ -19,3 +19,6 @@ Arguments: `$ARGUMENTS`
   assessments, fanning out parallel sub-agents for large rosters).
 - `--manifest-only`: discovery + auto-derived shape diagrams and mechanical
   assessment fallbacks only; skip the expensive curated authoring.
+
+This command is for the initial build. If `docs/explorer/` already exists, invoke
+`/update-explorer` so removals remain historical and the verified update log is preserved.

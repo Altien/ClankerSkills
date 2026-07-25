@@ -35,6 +35,8 @@ Everything lives under
 | [`reference/AUTHORING.md`](skills-explorer/skills/build-explorer/reference/AUTHORING.md) | The binding spec for authored fragments (node rules, `srcHeading`/`srcFocus`/`srcWhole`, note quality bar). **Copy verbatim.** |
 | [`templates/build_explorer.skeleton.py`](skills-explorer/skills/build-explorer/templates/build_explorer.skeleton.py) | **Adapt per repo.** Generic discovery that auto-detects common conventions, with marked `ADAPT` extension points. |
 | [`examples/claude-for-legal.build_explorer.py`](skills-explorer/skills/build-explorer/examples/claude-for-legal.build_explorer.py) | Worked example: a 13-plugin marketplace (skills + agents + managed-agent cookbooks + embedded prompts + TS registry parsing). |
+| [`skills/update-explorer/SKILL.md`](skills-explorer/skills/update-explorer/SKILL.md) | Subsequent-update procedure: re-import tools, extract in the source repo, preserve history, verify, report, and commit. |
+| [`skills/update-explorer/scripts/catalog_bundle.py`](skills-explorer/skills/update-explorer/scripts/catalog_bundle.py) | Deterministic bundle/history/checksum/verification/log publisher copied into each source repository. |
 
 ### What ships verbatim vs. what is authored per repo
 
@@ -42,8 +44,10 @@ Everything lives under
   `serve.py`, `verify.cjs`, `assemble_data.py`, `AUTHORING.md`.
 - **Adapt** the discovery layer: `build_explorer.py` (start from the skeleton).
 - **Author**: the curated `data/*.json` fragments (graphs + assessments).
-- **Generated** (never hand-edit): `explorer-manifest.json` (from
-  `build_explorer.py`), `assets/explorer-data.js` (from `assemble_data.py`).
+- **Generated** (never hand-edit): `explorer-manifest.json` and
+  `catalog/discovered.json` (from `build_explorer.py`),
+  `assets/explorer-data.js` (from `assemble_data.py`), and the verified
+  `catalog/{catalog.bundle.json,*.sha256,verification.json,state.json,update-log.jsonl}`.
 
 > Golden rule: the **mechanical manifest** and the **authored data** are separate
 > sources, merged by `id` in the app. Regenerating the manifest never clobbers
@@ -62,22 +66,25 @@ code** (`*_PROMPT`/`SYSTEM_PROMPT`/`*_TEMPLATE`, `role:"system"`,
 `PromptTemplate`/`.from_template`, triple-quoted/template-literal blocks — record
 path AND line range). Record what you find.
 
-The skeleton's embedded scanner **auto-walks the source tree by default**
-(`EMBEDDED_SCAN`/`EMBEDDED_FILES`/`SCAN_EXTS`) and handles named template-literal
-and triple-quoted constants, prompt builder functions,
-`PromptTemplate`/`from_template`/`from_messages`, and inline `role:"system"`
-content — name- and length-gated to limit noise. Because a full-tree scan can be
-noisy or heavy on large polyglot repos, **ask the user** whether to scan all
-source, only specific files/dirs (`EMBEDDED_FILES`), or skip it
-(`EMBEDDED_SCAN = False`). The manifest's coverage block records exactly what was
-scanned.
+The skeleton's embedded scanner **auto-walks text source files by default** and
+handles language-specific literal forms for Python, ECMAScript, Go, Rust, JVM,
+.NET, C-family, Ruby, PHP, Swift, Dart, Elixir/Erlang, Lua/R/Julia/Nim/Zig,
+shells, and PowerShell. Unknown source extensions use a conservative generic
+fallback rather than being excluded. Named literals, prompt-builder calls, and
+paired `role: system` content are name/content gated to reduce noise. The
+manifest reports profiles, extensions, generic fallbacks, skips, warnings, and
+candidate counts; unexplained gaps must be resolved in the repository adapter.
 
 ### Phase 1 — Discover everything
-Copy the kit into `docs/explorer/`. Start `build_explorer.py` from the skeleton
+Copy the kit into `docs/explorer/`, plus the updater's `catalog_bundle.py`, schemas,
+and catalog contract into `docs/explorer/{tools,schemas}/`. Start
+`build_explorer.py` from the skeleton
 and adapt its discovery to the Phase-0 conventions. Run it; iterate until
 discovery is exhaustive and deduplicated, reporting counts + the coverage list.
 Use a **UTF-8-safe unescaper** for quoted strings from source (not Python's
-`unicode_escape`).
+`unicode_escape`). Every generic and repository-specific discoverer must retain
+the exact body as `_content`; the builder writes it to
+`catalog/discovered.json` while structured-registry parsing context still exists.
 
 ### Phase 2 — Author the per-artifact data
 Read `AUTHORING.md`. For every artifact author an assessment card and a workflow
@@ -98,6 +105,8 @@ in `index.html`; replace the `YOUR_REPO` placeholders.
 python3 docs/explorer/build_explorer.py    # -> explorer-manifest.json
 python3 docs/explorer/assemble_data.py     # data/*.json -> assets/explorer-data.js
 node docs/explorer/verify.cjs              # MUST exit 0
+python3 docs/explorer/tools/catalog_bundle.py publish --summary "Initial verified catalog."
+python3 docs/explorer/tools/catalog_bundle.py verify
 python3 docs/explorer/serve.py             # eyeball in a browser
 ```
 Verification is **structural** (graph integrity, geometry, section resolution,
@@ -105,8 +114,11 @@ authored-summary coverage, distinct sibling slices), not pixel-level — eyeball
 `serve.py`.
 
 ### Phase 5 — Wrap up
-Write `docs/explorer/README.md` (serve, regenerate, maintenance rules). Commit on
-a feature branch only if asked.
+Write `docs/explorer/README.md` (serve, regenerate, maintenance rules, Doc build
+log). Commit the verified Explorer on a feature branch; opening a PR still needs
+confirmation. Use `/update-explorer` for later refreshes. Its checked-in bundle
+retains disappeared artifacts as historical records and its JSONL report is
+append-only and hash-chained.
 
 ## Quality bar
 Effort and judgement are the standard. Every user-facing string must be specific

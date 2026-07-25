@@ -45,11 +45,20 @@ INCLUDE_HTML = True
 # always honored regardless of roots, so cited source outside the roots still gets in.
 INCLUDE_ROOTS: set[str] = set()
 
-# ADAPT 1 — extra non-Markdown files worth browsing (rendered as code blocks).
-# Add canonical specs/configs the repo treats as references. Exact repo-relative
-# paths in INCLUDE_EXTRA_PATHS; globs in INCLUDE_EXTRA_GLOBS. Empty by default.
+# ADAPT 1 — extra non-Markdown *text* files worth browsing (rendered as code
+# blocks). Add canonical specs/configs the repo treats as references. Exact
+# repo-relative paths in INCLUDE_EXTRA_PATHS; globs in INCLUDE_EXTRA_GLOBS.
+# These ARE read_text()'d, so never point them at binaries — use ADAPT 1b.
 INCLUDE_EXTRA_PATHS: set[str] = set()
 INCLUDE_EXTRA_GLOBS: list[str] = []
+
+# NOTE — two binary-document mechanisms currently coexist, developed in parallel
+# (ADAPT 1b and ADAPT 1d below). Both are inert until their own knob is set, and
+# 1d skips anything 1b already indexed, so they cannot double-index. They differ
+# in intent: 1b links OUT to a commit-pinned cloud source (the dev-mirror / cloud
+# case), 1d indexes IN-PLACE for browsing with an inline preview (the "repo IS a
+# document corpus" case). They should be unified behind one knob — see the
+# follow-up note in SKILL.md.
 
 # ADAPT 1b — link binary documents (Word/PDF/PowerPoint/spreadsheets/etc) to their
 # source instead of re-hosting them. Surfaced only when DOC_CLOUD_BASE is set. At
@@ -70,6 +79,28 @@ BINARY_SUFFIXES = {
 # used only for the cloud link (DOC_CLOUD_BASE + upstream path). Local serving still
 # uses the real local path, so the file opens both places. Empty by default.
 DOC_PATH_REMAP: dict[str, str] = {}
+
+# ADAPT 1d — binary documents to index for BROWSING ONLY (PDFs, Office files,
+# images). Empty by default. These are never read_text()'d: they appear in the
+# file tree under their real folder hierarchy, and the SPA renders a document
+# card (folder, type, size, a link to the original) with an inline preview for
+# PDFs and images. Nothing is copied — links resolve to the file in place, and
+# serve.py serves the repository root.
+#
+# Use this when a repo's substance IS its documents (a corpus, a data room, a
+# design-asset folder) rather than its prose. e.g. ["Input Documents/**/*"].
+INCLUDE_ASSET_GLOBS: list[str] = []
+
+# Suffixes eligible for asset indexing (anything else matched by the globs above
+# is skipped). Extend per repo if you have other binaries worth browsing.
+ASSET_SUFFIXES = {
+    ".pdf", ".docx", ".xlsx", ".pptx", ".doc", ".xls", ".ppt", ".csv",
+    ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".zip",
+}
+
+# Extensions a browser can display inline rather than download. Drives the
+# preview pane in the SPA; everything else just gets a link.
+INLINE_PREVIEW = {".pdf", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"}
 
 # ADAPT 2 — directories never to walk (VCS, build output, vendored trees).
 EXCLUDE_DIRS = {
@@ -264,6 +295,34 @@ def iter_binary_paths() -> list[Path]:
     return out
 
 
+def iter_asset_paths(already: set[Path]) -> list[Path]:
+    """Binary documents to list in the tree. Metadata only — never read."""
+    seen: set[Path] = set()
+    out: list[Path] = []
+    for pattern in INCLUDE_ASSET_GLOBS:
+        for p in sorted(REPO_ROOT.glob(pattern)):
+            if not p.is_file() or p in seen or p in already:
+                continue
+            if any(part in EXCLUDE_DIRS for part in p.parts):
+                continue
+            rel = p.relative_to(REPO_ROOT).as_posix()
+            if any(rel.startswith(x) for x in EXCLUDE_PATH_PREFIXES):
+                continue
+            if p.suffix.lower() not in ASSET_SUFFIXES:
+                continue
+            seen.add(p)
+            out.append(p)
+    return out
+
+
+def _human(n: int) -> str:
+    if n < 1024:
+        return f"{n} B"
+    if n < 1024 * 1024:
+        return f"{n / 1024:.0f} KiB"
+    return f"{n / 1024 / 1024:.1f} MiB"
+
+
 def build() -> dict:
     files = []
     for path in iter_candidate_paths():
@@ -311,11 +370,32 @@ def build() -> dict:
             entry["cloudPath"] = DOC_PATH_REMAP[rel]
         files.append(entry)
 
+    indexed = {REPO_ROOT / f["path"] for f in files}
+    for path in iter_asset_paths(indexed):
+        rel = path.relative_to(REPO_ROOT).as_posix()
+        ext = path.suffix.lower()
+        size = path.stat().st_size
+        files.append({
+            "path": rel,
+            "title": rel.rsplit("/", 1)[-1],
+            "summary": f"{ext.lstrip('.').upper()} document · {_human(size)}",
+            "size": size,
+            "lines": 0,
+            "category": categorize(rel),
+            "type": "asset",
+            "ext": ext.lstrip("."),
+            "inline": ext in INLINE_PREVIEW,
+        })
+
     files.sort(key=lambda f: f["path"])
+    docs = [f for f in files if f["type"] != "asset"]
+    assets = [f for f in files if f["type"] == "asset"]
     return {
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "repo": REPO_ROOT.name,
         "fileCount": len(files),
+        "docCount": len(docs),
+        "assetCount": len(assets),
         "totalBytes": sum(f["size"] for f in files),
         # Resolved at runtime by app.js: local checkout when served locally, this
         # commit-pinned base on cloud. Binary docs + HTML "view source" use it.
@@ -327,8 +407,9 @@ def build() -> dict:
 def main() -> None:
     manifest = build()
     OUTPUT.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"Wrote {OUTPUT.relative_to(REPO_ROOT)}: {manifest['fileCount']} files, "
-          f"{manifest['totalBytes'] / 1024:.0f} KiB indexed.")
+    print(f"Wrote {OUTPUT.relative_to(REPO_ROOT)}: {manifest['fileCount']} entries "
+          f"({manifest['docCount']} documents, {manifest['assetCount']} assets), "
+          f"{manifest['totalBytes'] / 1024 / 1024:.1f} MiB referenced.")
 
 
 if __name__ == "__main__":
