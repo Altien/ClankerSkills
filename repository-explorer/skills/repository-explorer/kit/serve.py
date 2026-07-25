@@ -47,8 +47,12 @@ def main():
         elif arg.isdigit():
             port = int(arg)
 
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("127.0.0.1", port), Handler) as httpd:
+    # Threaded: the explorer previews binary documents inline (PDF <embed>), so a
+    # single page load can issue several concurrent requests for multi-MB files.
+    # A single-threaded server serialises those and appears to hang.
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
+    socketserver.ThreadingTCPServer.daemon_threads = True
+    with socketserver.ThreadingTCPServer(("127.0.0.1", port), Handler) as httpd:
         url = f"http://127.0.0.1:{port}{URL_PATH}"
         print(f"Serving repo root {REPO_ROOT}")
         print(f"Explorer:  {url}")

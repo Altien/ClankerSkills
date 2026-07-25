@@ -127,10 +127,24 @@ default is browse **+** full analysis; `--browse-only` stops after Phase 1.
 2. **Adapt `DEST/build_manifest.py`** at its `ADAPT` blocks:
    `INCLUDE_ROOTS` (**design-doc mode**: the doc subtree(s) to index, e.g.
    `{"docs"}` — leave empty for whole-repo documentation mode), `INCLUDE_EXTRA_*`
-   (canonical non-Markdown specs / the **cited source files** in PRD mode, worth
-   browsing), `EXCLUDE_DIRS`/`EXCLUDE_PATH_PREFIXES` (vendored/generated trees from
+   (canonical non-Markdown **text** specs / the **cited source files** in PRD mode,
+   worth browsing), `INCLUDE_ASSET_GLOBS` (see below),
+   `EXCLUDE_DIRS`/`EXCLUDE_PATH_PREFIXES` (vendored/generated trees from
    Phase 0), and `CATEGORY_RULES` (map paths to the repo's vocabulary so the tree +
    the "Browse by area" grid read well). Run it; check the printed counts.
+
+   **When the repo's substance is its documents, not its prose** — a corpus, a
+   data room, a design-asset folder — set `INCLUDE_ASSET_GLOBS` (e.g.
+   `["Input Documents/**/*"]`). Those files are indexed from filesystem metadata
+   only and **never** `read_text()`'d, so they appear in the file tree under their
+   real folder hierarchy without the manifest ingesting megabytes of binary.
+   Opening one renders a document card (folder, type, size, a link to the
+   original) with an inline preview for PDFs and images; Office files are
+   download-only because browsers cannot display them. Nothing is copied — links
+   resolve to the file in place, and `serve.py` serves the repository root.
+   Review comments work on assets too, which makes the explorer a usable review
+   harness over a document set. Never put binaries in `INCLUDE_EXTRA_*`: those
+   *are* read as text.
 3. **Brand** — edit only the `window.EXPLORER_CONFIG` block in `DEST/index.html`:
    `brand`, `tagline`, optional `brandMark`/`accent`/`intro`, `commenting`,
    `keyDocs` (the curated "Start here" paths from Phase 0). Leave `analysisPages`
