@@ -1,5 +1,5 @@
 ---
-name: fork-trunk
+name: setup
 description: >
   Turn an existing GitHub fork into a clean two-branch setup: a fork-specific
   default development branch (e.g. <org>-main) that all your work lands on, while
@@ -9,7 +9,7 @@ description: >
   disable GitHub Actions on the fork. Use when the user says "make the repo
   default to <branch>", "give this fork its own main", "keep main tracking
   upstream and develop on a separate branch", "make sure our work goes on
-  <branch> not main", or runs /fork-trunk.
+  <branch> not main", or runs /fork-trunk:setup.
 argument-hint: "[trunk-branch-name] [--disable-ci]"
 ---
 
@@ -63,7 +63,7 @@ These bite on Windows / `gh` setups where a token is present in the environment:
 
 - `git remote -v` — expect `origin` (your fork) **and** `upstream` (canonical).
   If there is **no `upstream`**, stop and ask: this skill assumes an existing
-  fork. (To set up a fresh *private* mirror of a public repo, use `/mirror-repo`.)
+  fork. (To set up a fresh *private* mirror of a public repo, use `/private-mirror:mirror`.)
 - Derive `OWNER/REPO` from the `origin` URL; default `TRUNK = <OWNER lowercased>-main`.
 - `gh auth status` works (mind the token-shadowing gotcha above).
 - Working tree is clean (`git status --short` empty) and note the current branch

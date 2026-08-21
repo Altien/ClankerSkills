@@ -1,5 +1,5 @@
 ---
-name: repository-explorer
+name: build
 description: >
   Build a self-contained, static Repository Explorer for the current repository:
   a browsable Markdown documentation site (file tree, search, faithful GFM
@@ -13,7 +13,7 @@ description: >
   explorer", "make a browsable docs site for this repo", "give me a code-verified
   architecture overview with diagrams", "help me understand this repo before we
   edit it", "build a review harness for this PRD / design doc", or runs
-  /repository-explorer.
+  /repository-explorer:build.
 argument-hint: "[--browse-only] [--no-comments] [--prd <docs-path>] [--update] [target path, default: repo root]"
 ---
 
@@ -70,7 +70,7 @@ in **this skill's own directory** (the folder containing this `SKILL.md`), under
 Locate that directory robustly — it works whether this runs as a plugin or as a
 plain skill in `~/.claude/skills/`:
 `${CLAUDE_SKILL_DIR}` is the skill's own directory in both modes (equivalently
-`${CLAUDE_PLUGIN_ROOT}/skills/repository-explorer` when installed as a plugin); if
+`${CLAUDE_PLUGIN_ROOT}/skills/build` when installed as a plugin); if
 neither variable is set, fall back to the directory that contains this `SKILL.md`.
 Then let:
 

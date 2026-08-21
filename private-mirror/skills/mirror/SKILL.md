@@ -1,5 +1,5 @@
 ---
-name: mirror-repo
+name: mirror
 description: >
   Set up the current empty directory as a private mirror of a public GitHub repo
   — like a fork, but private: pull updates from upstream but never push to it.
@@ -7,7 +7,7 @@ description: >
   fail, and email the owner), rewires remotes so plain push/pull only touch your
   private copy, and physically disables pushing to upstream. Use when the user
   says "make a private mirror/fork of <repo>", "privately track an upstream repo",
-  "mirror this public repo into my org", or runs /mirror-repo.
+  "mirror this public repo into my org", or runs /private-mirror:mirror.
 argument-hint: "<upstream-git-url> <my-org/my-repo>"
 ---
 

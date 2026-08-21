@@ -1,6 +1,7 @@
 ---
-name: update-explorer
+name: update
 description: Update an existing repository-owned Skills & Prompts Explorer from current source, re-import current Explorer tooling, pre-extract exact bodies, review changed curation, preserve removed artifacts as history, publish a verified bundle, and append an auditable update log. Use for every refresh after build-explorer.
+argument-hint: "[--dry-run] [target path, default: repo root]"
 ---
 
 # Update a Skills & Prompts Explorer
@@ -12,8 +13,8 @@ If no Explorer exists, stop and use `build-explorer`. If the existing Explorer c
 extract an artifact exactly or its coverage is ambiguous, stop and discuss that gap with
 the user rather than shifting discovery into the downstream library.
 
-Let `SELF = ${CLAUDE_PLUGIN_ROOT}/skills/update-explorer`,
-`BUILD = ${CLAUDE_PLUGIN_ROOT}/skills/build-explorer`, and
+Let `SELF = ${CLAUDE_PLUGIN_ROOT}/skills/update`,
+`BUILD = ${CLAUDE_PLUGIN_ROOT}/skills/build`, and
 `DEST = <target repository>/docs/explorer`.
 
 ## Model delegation boundary

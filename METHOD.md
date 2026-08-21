@@ -8,10 +8,10 @@ read the verbatim source for that step.
 
 You can drive this three ways — they share the same kit:
 
-1. **Plugin (recommended):** install this marketplace, then run `/build-explorer`
+1. **Plugin (recommended):** install this marketplace, then run `/skills-explorer:build`
    or just ask Claude to "build a skills explorer for this repo". See
    [README.md](README.md). The skill body
-   ([`skills-explorer/skills/build-explorer/SKILL.md`](skills-explorer/skills/build-explorer/SKILL.md))
+   ([`skills-explorer/skills/build/SKILL.md`](skills-explorer/skills/build/SKILL.md))
    is the same playbook below.
 2. **Any agent / by hand:** point your agent at this file and the kit, and follow
    the phases.
@@ -21,22 +21,22 @@ You can drive this three ways — they share the same kit:
 ## The kit (static, reusable components)
 
 Everything lives under
-[`skills-explorer/skills/build-explorer/`](skills-explorer/skills/build-explorer/):
+[`skills-explorer/skills/build/`](skills-explorer/skills/build/):
 
 | Path | Role |
 |------|------|
-| [`kit/assets/app.js`](skills-explorer/skills/build-explorer/kit/assets/app.js) | SPA: router, search, assessment-card renderer, programmatic-surface panel, SVG diagram generator, fence-aware click-to-source section slicer. Branding comes from `EXPLORER_CONFIG`. **Copy verbatim.** |
-| [`kit/assets/marked.min.js`](skills-explorer/skills/build-explorer/kit/assets/marked.min.js) | Vendored minimal Markdown renderer. Zero deps. **Copy verbatim.** |
-| [`kit/assets/styles.css`](skills-explorer/skills/build-explorer/kit/assets/styles.css) | Light/dark theming via CSS variables. **Copy verbatim.** |
-| [`kit/index.html`](skills-explorer/skills/build-explorer/kit/index.html) | Shell. The **only** edit is the `EXPLORER_CONFIG` branding block + matching brand text. |
-| [`kit/serve.py`](skills-explorer/skills/build-explorer/kit/serve.py) | Stdlib HTTP server (serves repo root, opens `/docs/explorer/`). **Copy verbatim.** |
-| [`kit/verify.cjs`](skills-explorer/skills/build-explorer/kit/verify.cjs) | Repo-agnostic structural verifier. **Copy verbatim.** |
-| [`kit/assemble_data.py`](skills-explorer/skills/build-explorer/kit/assemble_data.py) | Merges + validates `data/*.json` → `assets/explorer-data.js`. **Copy verbatim.** |
-| [`reference/AUTHORING.md`](skills-explorer/skills/build-explorer/reference/AUTHORING.md) | The binding spec for authored fragments (node rules, `srcHeading`/`srcFocus`/`srcWhole`, note quality bar). **Copy verbatim.** |
-| [`templates/build_explorer.skeleton.py`](skills-explorer/skills/build-explorer/templates/build_explorer.skeleton.py) | **Adapt per repo.** Generic discovery that auto-detects common conventions, with marked `ADAPT` extension points. |
-| [`examples/claude-for-legal.build_explorer.py`](skills-explorer/skills/build-explorer/examples/claude-for-legal.build_explorer.py) | Worked example: a 13-plugin marketplace (skills + agents + managed-agent cookbooks + embedded prompts + TS registry parsing). |
-| [`skills/update-explorer/SKILL.md`](skills-explorer/skills/update-explorer/SKILL.md) | Subsequent-update procedure: re-import tools, extract in the source repo, preserve history, verify, report, and commit. |
-| [`skills/update-explorer/scripts/catalog_bundle.py`](skills-explorer/skills/update-explorer/scripts/catalog_bundle.py) | Deterministic bundle/history/checksum/verification/log publisher copied into each source repository. |
+| [`kit/assets/app.js`](skills-explorer/skills/build/kit/assets/app.js) | SPA: router, search, assessment-card renderer, programmatic-surface panel, SVG diagram generator, fence-aware click-to-source section slicer. Branding comes from `EXPLORER_CONFIG`. **Copy verbatim.** |
+| [`kit/assets/marked.min.js`](skills-explorer/skills/build/kit/assets/marked.min.js) | Vendored minimal Markdown renderer. Zero deps. **Copy verbatim.** |
+| [`kit/assets/styles.css`](skills-explorer/skills/build/kit/assets/styles.css) | Light/dark theming via CSS variables. **Copy verbatim.** |
+| [`kit/index.html`](skills-explorer/skills/build/kit/index.html) | Shell. The **only** edit is the `EXPLORER_CONFIG` branding block + matching brand text. |
+| [`kit/serve.py`](skills-explorer/skills/build/kit/serve.py) | Stdlib HTTP server (serves repo root, opens `/docs/explorer/`). **Copy verbatim.** |
+| [`kit/verify.cjs`](skills-explorer/skills/build/kit/verify.cjs) | Repo-agnostic structural verifier. **Copy verbatim.** |
+| [`kit/assemble_data.py`](skills-explorer/skills/build/kit/assemble_data.py) | Merges + validates `data/*.json` → `assets/explorer-data.js`. **Copy verbatim.** |
+| [`reference/AUTHORING.md`](skills-explorer/skills/build/reference/AUTHORING.md) | The binding spec for authored fragments (node rules, `srcHeading`/`srcFocus`/`srcWhole`, note quality bar). **Copy verbatim.** |
+| [`templates/build_explorer.skeleton.py`](skills-explorer/skills/build/templates/build_explorer.skeleton.py) | **Adapt per repo.** Generic discovery that auto-detects common conventions, with marked `ADAPT` extension points. |
+| [`examples/claude-for-legal.build_explorer.py`](skills-explorer/skills/build/examples/claude-for-legal.build_explorer.py) | Worked example: a 13-plugin marketplace (skills + agents + managed-agent cookbooks + embedded prompts + TS registry parsing). |
+| [`skills/update/SKILL.md`](skills-explorer/skills/update/SKILL.md) | Subsequent-update procedure: re-import tools, extract in the source repo, preserve history, verify, report, and commit. |
+| [`skills/update/scripts/catalog_bundle.py`](skills-explorer/skills/update/scripts/catalog_bundle.py) | Deterministic bundle/history/checksum/verification/log publisher copied into each source repository. |
 
 ### What ships verbatim vs. what is authored per repo
 
@@ -116,7 +116,7 @@ authored-summary coverage, distinct sibling slices), not pixel-level — eyeball
 ### Phase 5 — Wrap up
 Write `docs/explorer/README.md` (serve, regenerate, maintenance rules, Doc build
 log). Commit the verified Explorer on a feature branch; opening a PR still needs
-confirmation. Use `/update-explorer` for later refreshes. Its checked-in bundle
+confirmation. Use `/skills-explorer:update` for later refreshes. Its checked-in bundle
 retains disappeared artifacts as historical records and its JSONL report is
 append-only and hash-chained.
 

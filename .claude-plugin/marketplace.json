@@ -10,7 +10,7 @@
       "name": "adopt-repo",
       "displayName": "Adopt Repo",
       "source": "./adopt-repo",
-      "description": "Onboard an upstream OSS repo into the dev workspace end to end: create a private <name>-dev mirror, give it an altien-main development trunk (main stays a pristine upstream mirror), vendor the explorer skills into the repo and push them so Claude in the cloud can build the documentation islands, pause for that cloud build, then pull the islands back and register them on the docs launcher. A sequencer over private-mirror, fork-trunk, the explorer skills, and rescan-docs. Exposes /adopt-repo.",
+      "description": "Onboard an upstream OSS repo into the dev workspace end to end: create a private <name>-dev mirror, give it an altien-main development trunk (main stays a pristine upstream mirror), vendor the explorer skills into the repo and push them so Claude in the cloud can build the documentation islands, pause for that cloud build, then pull the islands back and register them on the docs launcher. A sequencer over private-mirror, fork-trunk, the explorer skills, and rescan-docs. Exposes /adopt-repo:adopt.",
       "author": {
         "name": "Altien"
       }
@@ -28,7 +28,7 @@
       "name": "private-mirror",
       "displayName": "Private Mirror",
       "source": "./private-mirror",
-      "description": "Set up the current empty directory as a private mirror of a public GitHub repo — like a fork, but private: pull updates from upstream but never push to it. Disables GitHub Actions before the first push, rewires remotes so plain push/pull only touch your private copy, and physically disables pushing to upstream. Exposes /mirror-repo.",
+      "description": "Set up the current empty directory as a private mirror of a public GitHub repo — like a fork, but private: pull updates from upstream but never push to it. Disables GitHub Actions before the first push, rewires remotes so plain push/pull only touch your private copy, and physically disables pushing to upstream. Exposes /private-mirror:mirror.",
       "author": {
         "name": "Altien"
       }
@@ -37,7 +37,7 @@
       "name": "fork-trunk",
       "displayName": "Fork Trunk",
       "source": "./fork-trunk",
-      "description": "Turn an existing GitHub fork into a clean two-branch setup: a fork-specific default development branch (e.g. <org>-main) that all your work lands on, while main stays a pristine mirror of upstream you only sync from. Creates the trunk off the upstream-synced main, sets it as the GitHub AND local default, routes unmerged local work onto it via PR (never onto main), and can disable GitHub Actions on the fork. Exposes /fork-trunk.",
+      "description": "Turn an existing GitHub fork into a clean two-branch setup: a fork-specific default development branch (e.g. <org>-main) that all your work lands on, while main stays a pristine mirror of upstream you only sync from. Creates the trunk off the upstream-synced main, sets it as the GitHub AND local default, routes unmerged local work onto it via PR (never onto main), and can disable GitHub Actions on the fork. Exposes /fork-trunk:setup.",
       "author": {
         "name": "Altien"
       }
@@ -46,7 +46,7 @@
       "name": "sync-upstream",
       "displayName": "Sync Upstream",
       "source": "./sync-upstream",
-      "description": "Pull upstream changes into a dev-workspace repo set up by mirror-repo/fork-trunk/adopt-repo: fast-forward the pristine main from upstream, land those commits on the development trunk via a reviewable PR, then reconcile any vendored documentation islands (Repository Explorer, Skills & Prompts Explorer, The Atlas) with the changed code by handing off to their own update modes. Exposes /sync-upstream.",
+      "description": "Pull upstream changes into a dev-workspace repo set up by mirror-repo/fork-trunk/adopt-repo: fast-forward the pristine main from upstream, land those commits on the development trunk via a reviewable PR, then reconcile any vendored documentation islands (Repository Explorer, Skills & Prompts Explorer, The Atlas) with the changed code by handing off to their own update modes. Exposes /sync-upstream:sync.",
       "author": {
         "name": "Altien"
       }
@@ -55,7 +55,7 @@
       "name": "prd-reviewer",
       "displayName": "PRD Reviewer",
       "source": "./prd-reviewer",
-      "description": "Builds a self-contained, static review harness for ONE PRD / design / epic — not the whole repo. Scopes a Markdown browser to a single PRD folder plus the source it references (driven by a referenced-files.txt list in the PRD folder), so a reviewer reads the design and clicks straight through to the real code. Sidebar leads with the PRD and groups referenced source (collapsed); source renders colour-coded, line-numbered, with brace folding; mermaid diagrams get a full-screen zoom/pan overlay. Quiet commenting: the panel stays closed until asked for, select text and right-click to comment, and commented passages get an inline marker you can click. Exposes /prd-reviewer.",
+      "description": "Builds a self-contained, static review harness for ONE PRD / design / epic — not the whole repo. Scopes a Markdown browser to a single PRD folder plus the source it references (driven by a referenced-files.txt list in the PRD folder), so a reviewer reads the design and clicks straight through to the real code. Sidebar leads with the PRD and groups referenced source (collapsed); source renders colour-coded, line-numbered, with brace folding; mermaid diagrams get a full-screen zoom/pan overlay. Quiet commenting: the panel stays closed until asked for, select text and right-click to comment, and commented passages get an inline marker you can click. Exposes /prd-reviewer:review.",
       "author": {
         "name": "Altien"
       }
@@ -64,7 +64,7 @@
       "name": "repository-explorer",
       "displayName": "Repository Explorer",
       "source": "./repository-explorer",
-      "description": "Builds a self-contained, static Repository Explorer for any repo: a browsable Markdown documentation site (file tree, search, rendered mermaid, and a review/commenting layer) plus a code-verified Architecture & Technology analysis published as both Markdown and expressive HTML with hand-authored inline-SVG diagrams. Browse the docs, then read an honest, source-linked walkthrough of how the system actually fits together. Exposes /repository-explorer.",
+      "description": "Builds a self-contained, static Repository Explorer for any repo: a browsable Markdown documentation site (file tree, search, rendered mermaid, and a review/commenting layer) plus a code-verified Architecture & Technology analysis published as both Markdown and expressive HTML with hand-authored inline-SVG diagrams. Browse the docs, then read an honest, source-linked walkthrough of how the system actually fits together. Exposes /repository-explorer:build.",
       "author": {
         "name": "Altien"
       }
@@ -73,7 +73,7 @@
       "name": "atlas-explorer",
       "displayName": "The Atlas",
       "source": "./atlas-explorer",
-      "description": "Builds The Atlas for a repository: a live FastAPI documentation navigator that binds every markdown doc to the code it describes. Doc↔code 50/50 views (path mentions become chips; the panel shows tree-sitter-sliced, Pygments-highlighted source with fold regions and jump-to-symbol), SQLite FTS5 search, live drift detection (every doc→code reference verified against the tree, plus deterministic quantitative-claim counters), authored curation (per-doc summaries, sequenced journeys, clickable SVG flow diagrams), and anchored commenting with clipboard agent-brief export. The heavyweight, server-based sibling to the static explorers — self-contained and local, but with real Python dependencies. Exposes /build-atlas.",
+      "description": "Builds The Atlas for a repository: a live FastAPI documentation navigator that binds every markdown doc to the code it describes. Doc↔code 50/50 views (path mentions become chips; the panel shows tree-sitter-sliced, Pygments-highlighted source with fold regions and jump-to-symbol), SQLite FTS5 search, live drift detection (every doc→code reference verified against the tree, plus deterministic quantitative-claim counters), authored curation (per-doc summaries, sequenced journeys, clickable SVG flow diagrams), and anchored commenting with clipboard agent-brief export. The heavyweight, server-based sibling to the static explorers — self-contained and local, but with real Python dependencies. Exposes /atlas-explorer:build.",
       "author": {
         "name": "Altien"
       }

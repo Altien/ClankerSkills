@@ -1,5 +1,5 @@
 ---
-name: atlas-explorer
+name: build
 description: >
   Build "The Atlas" for the current repository — a live FastAPI documentation
   navigator that binds every markdown doc to the code it describes. Doc↔code
@@ -11,7 +11,7 @@ description: >
   diagrams), and anchored commenting with clipboard "agent brief" export. Use
   when the user says "build an atlas", "build a documentation navigator for this
   repo", "bind the docs to the code", "give me a doc explorer with drift
-  detection", or runs /build-atlas.
+  detection", or runs /atlas-explorer:build.
 argument-hint: "[--no-curation] [--no-comments] [--manifest-only] [--update] [target dir, default: docs/atlas]"
 ---
 
@@ -41,7 +41,7 @@ This skill bundles the engine, the authoring references, a config skeleton, and
 a full worked example in its own directory. Resolve that directory robustly —
 it works whether this runs as a plugin or a plain skill in `~/.claude/skills/`:
 `${CLAUDE_SKILL_DIR}` is the skill's own directory in both modes (equivalently
-`${CLAUDE_PLUGIN_ROOT}/skills/atlas-explorer` when installed as a plugin); if
+`${CLAUDE_PLUGIN_ROOT}/skills/build` when installed as a plugin); if
 neither is set, fall back to the directory that contains this `SKILL.md`. Then:
 
 - `SELF` = this skill's directory (resolved above)

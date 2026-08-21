@@ -1,5 +1,5 @@
 ---
-name: prd-reviewer
+name: review
 description: >
   Build a self-contained, static review harness for ONE PRD / design / epic — not
   the whole repo. Scopes a Markdown browser to a single PRD folder plus the source
@@ -12,7 +12,7 @@ description: >
   stays closed until asked for; select text and right-click to comment; commented
   passages get an inline marker. Use when the user says "build a PRD browser/reviewer",
   "make a review harness for this PRD / design doc / epic", "let me review and comment
-  on <doc>", or runs /prd-reviewer.
+  on <doc>", or runs /prd-reviewer:review.
 argument-hint: "[--no-comments] <PRD folder, e.g. docs/JIRA/JIRA-1855>"
 ---
 
@@ -46,7 +46,7 @@ copy-verbatim; do not hand-edit them.
 
 The engine is bundled in this skill's own directory (the folder containing this
 `SKILL.md`), under `kit/`. Locate it via `${CLAUDE_SKILL_DIR}` (equivalently
-`${CLAUDE_PLUGIN_ROOT}/skills/prd-reviewer`); if unset, use the directory containing
+`${CLAUDE_PLUGIN_ROOT}/skills/review`); if unset, use the directory containing
 this `SKILL.md`. Then let `KIT = SELF/kit` and `DEST = <repo>/<PRD_DIR>/review`.
 
 > **Golden rule:** the **mechanical manifest** (`manifest.json`, from

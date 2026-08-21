@@ -1,6 +1,6 @@
 {
   "name": "sync-upstream",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Pull upstream changes into a dev-workspace repo created by mirror-repo/fork-trunk/adopt-repo, land them on the development trunk, and reconcile any vendored documentation islands (Repository Explorer, Skills & Prompts Explorer, The Atlas) with the updated code. A sequencer over the explorer skills' own update modes.",
   "author": {
     "name": "Altien"

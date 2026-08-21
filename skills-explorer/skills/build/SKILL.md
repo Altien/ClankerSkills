@@ -1,6 +1,7 @@
 ---
-name: build-explorer
+name: build
 description: Build the initial self-contained Skills & Prompts Explorer for a repository, including polyglot embedded-prompt discovery, exact pre-extracted bodies, authored assessments and workflows, a verified downstream catalog bundle, and immutable Git provenance. Use for the first Explorer build; use update-explorer for an existing Explorer.
+argument-hint: "[--manifest-only] [target path, default: repo root]"
 ---
 
 # Build a Skills & Prompts Explorer
@@ -10,8 +11,8 @@ them; never invent metadata, workflow steps, or commentary. The source repositor
 discovery and publishes exact prompt/skill bodies. A downstream directory consumes only
 the verified catalog bundle and must not rescan the source repository.
 
-Let `BUILD = ${CLAUDE_PLUGIN_ROOT}/skills/build-explorer`,
-`UPDATE = ${CLAUDE_PLUGIN_ROOT}/skills/update-explorer`, and
+Let `BUILD = ${CLAUDE_PLUGIN_ROOT}/skills/build`,
+`UPDATE = ${CLAUDE_PLUGIN_ROOT}/skills/update`, and
 `DEST = <target repository>/docs/explorer`.
 
 ## 1. Establish the repository conventions

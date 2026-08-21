@@ -1,5 +1,5 @@
 ---
-name: adopt-repo
+name: adopt
 description: >
   Onboard an upstream OSS repository into the dev workspace end to end. Creates a
   private <name>-dev mirror of the upstream, gives it an altien-main development
@@ -8,7 +8,7 @@ description: >
   islands, pauses for that cloud build, then pulls the islands back and registers
   them on the docs launcher. Use when the user says "onboard this OSS repo",
   "adopt <repo> into the dev workspace", "mirror and document a new upstream",
-  "set up a -dev repo for <url>", or runs /adopt-repo. This is a SEQUENCER over
+  "set up a -dev repo for <url>", or runs /adopt-repo:adopt. This is a SEQUENCER over
   mirror-repo, fork-trunk, the explorer skills, and rescan-docs — it does not
   re-implement them.
 argument-hint: "<upstream-git-url> [dest-name]"
@@ -74,7 +74,7 @@ Derive and **confirm all of these with the user before doing anything**:
 
 ## Phase 1 — Private mirror
 
-Invoke **`/mirror-repo`** with `<UPSTREAM_URL> <MY_REPO>`.
+Invoke **`/private-mirror:mirror`** with `<UPSTREAM_URL> <MY_REPO>`.
 
 It will: create the private `MY_REPO` if needed, **disable GitHub Actions before
 the first push**, clone, rewire remotes (`origin` = your private repo,
@@ -87,7 +87,7 @@ This leaves exactly the remote shape fork-trunk expects (`origin` = your fork,
 
 ## Phase 1b — Development trunk
 
-Invoke **`/fork-trunk`** with `altien-main` as the trunk name.
+Invoke **`/fork-trunk:setup`** with `altien-main` as the trunk name.
 
 It will: keep `main` a pristine mirror of `upstream/main`, branch `altien-main`
 off it, set `altien-main` as both the GitHub and local default, and wire local
@@ -130,7 +130,7 @@ live *inside* the repo and be pushed before the cloud can run them.
    won't have them.)
 
 These pushes go **only** to the dev repo this skill just created — that is the
-explicit intent of running `/adopt-repo`, so no extra confirmation is needed for
+explicit intent of running `/adopt-repo:adopt`, so no extra confirmation is needed for
 them (this is the one boundary the workspace's AGENTS.md caution is about).
 
 ## Phase 3 — Hand the island builds to the cloud, then PAUSE
@@ -146,12 +146,12 @@ Handoff to print:
 Repo:   https://github.com/Altien/<DEST_NAME>   (branch: altien-main)
 Open this repo in Claude (cloud) on the altien-main branch and run:
 
-  /repository-explorer      → docs/repository-explorer/   (always)
-  /build-explorer           → docs/explorer/               (only if the repo has skills/agents/prompts; it auto-detects and will say so)
-  /build-atlas              → docs/atlas/                  (optional, heavyweight — only if you want the live doc↔code Atlas)
+  /repository-explorer:build      → docs/repository-explorer/   (always)
+  /skills-explorer:build           → docs/explorer/               (only if the repo has skills/agents/prompts; it auto-detects and will say so)
+  /atlas-explorer:build              → docs/atlas/                  (optional, heavyweight — only if you want the live doc↔code Atlas)
 
 Let the cloud session commit the generated docs/ islands to altien-main and push.
-Then come back here and say "register the <DEST_NAME> islands" (or re-run /adopt-repo) to finish.
+Then come back here and say "register the <DEST_NAME> islands" (or re-run /adopt-repo:adopt) to finish.
 ```
 
 Note that `build-explorer` may find no skills/prompts in a plain application repo
@@ -185,6 +185,6 @@ Print a final summary:
   `publishable` flag.
 - The two sync cheat-sheets the component skills printed (upstream → main, and
   develop-on-trunk), so the user has them in one place.
-- Point the user at **`/sync-upstream`** for catching this repo up later —
+- Point the user at **`/sync-upstream:sync`** for catching this repo up later —
   it's the ongoing counterpart to this one-time setup, and it also reconciles
   the vendored documentation islands with whatever changed.

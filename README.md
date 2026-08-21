@@ -18,13 +18,13 @@ you want and the skill auto-triggers.
 
 | Plugin | Command | What it builds |
 |--------|---------|----------------|
-| **Adopt Repo** (`adopt-repo`) | `/adopt-repo` | The front-runner. Onboards an upstream OSS repo into the dev workspace end to end — private `<name>-dev` mirror → `altien-main` development trunk → vendors the explorer skills into the repo and pushes them → **pauses** so Claude in the cloud can build the documentation islands → pulls them back and registers them on the docs launcher. A sequencer over the four plugins below plus `rescan-docs`. |
-| **Skills & Prompts Explorer** (`skills-explorer`) | `/build-explorer`, `/update-explorer` | A dependency-light **static** site plus a repository-owned catalog. Polyglot discovery pre-extracts exact skill/prompt bodies in the source repo; verified bundles preserve removals as history, pin provenance to immutable commits, and carry a hash-chained update log. |
-| **Repository Explorer** (`repository-explorer`) | `/repository-explorer` | A **static** browsable Markdown documentation site (file tree, search, rendered mermaid, optional review/commenting) **plus** a code-verified "Architecture & Technology" analysis published as both Markdown and an expressive HTML page with hand-authored inline-SVG diagrams. |
-| **The Atlas** (`atlas-explorer`) | `/build-atlas` | A **live FastAPI** documentation navigator that binds every markdown doc to the code it describes: doc↔code 50/50 views, tree-sitter symbol slicing with fold regions, SQLite FTS5 search, live drift detection, authored journeys + clickable SVG diagrams, and anchored feedback with clipboard agent-brief export. |
-| **Private Mirror** (`private-mirror`) | `/mirror-repo` | Sets up the current empty directory as a **private mirror** of a public GitHub repo — pull upstream updates, but pushes to upstream are physically disabled and Actions are turned off before the first push. |
-| **Fork Trunk** (`fork-trunk`) | `/fork-trunk` | Gives an **existing fork** its own default development branch (e.g. `<org>-main`) that all work lands on, while `main` stays a pristine mirror of upstream you only sync from. Sets the trunk as the GitHub + local default, routes unmerged local work onto it via PR (never onto `main`), and can disable Actions on the fork. |
-| **Sync Upstream** (`sync-upstream`) | `/sync-upstream` | The routine follow-up to the three above. Fast-forwards the pristine `main` from `upstream`, lands those commits on the dev trunk via a reviewable PR, then detects any vendored documentation islands and hands off to their own update modes (`/repository-explorer --update`, `/update-explorer`, `/build-atlas --update`) so the docs stay honest about the code that just moved. |
+| **Adopt Repo** (`adopt-repo`) | `/adopt-repo:adopt` | The front-runner. Onboards an upstream OSS repo into the dev workspace end to end — private `<name>-dev` mirror → `altien-main` development trunk → vendors the explorer skills into the repo and pushes them → **pauses** so Claude in the cloud can build the documentation islands → pulls them back and registers them on the docs launcher. A sequencer over the four plugins below plus `rescan-docs`. |
+| **Skills & Prompts Explorer** (`skills-explorer`) | `/skills-explorer:build`, `/skills-explorer:update` | A dependency-light **static** site plus a repository-owned catalog. Polyglot discovery pre-extracts exact skill/prompt bodies in the source repo; verified bundles preserve removals as history, pin provenance to immutable commits, and carry a hash-chained update log. |
+| **Repository Explorer** (`repository-explorer`) | `/repository-explorer:build` | A **static** browsable Markdown documentation site (file tree, search, rendered mermaid, optional review/commenting) **plus** a code-verified "Architecture & Technology" analysis published as both Markdown and an expressive HTML page with hand-authored inline-SVG diagrams. |
+| **The Atlas** (`atlas-explorer`) | `/atlas-explorer:build` | A **live FastAPI** documentation navigator that binds every markdown doc to the code it describes: doc↔code 50/50 views, tree-sitter symbol slicing with fold regions, SQLite FTS5 search, live drift detection, authored journeys + clickable SVG diagrams, and anchored feedback with clipboard agent-brief export. |
+| **Private Mirror** (`private-mirror`) | `/private-mirror:mirror` | Sets up the current empty directory as a **private mirror** of a public GitHub repo — pull upstream updates, but pushes to upstream are physically disabled and Actions are turned off before the first push. |
+| **Fork Trunk** (`fork-trunk`) | `/fork-trunk:setup` | Gives an **existing fork** its own default development branch (e.g. `<org>-main`) that all work lands on, while `main` stays a pristine mirror of upstream you only sync from. Sets the trunk as the GitHub + local default, routes unmerged local work onto it via PR (never onto `main`), and can disable Actions on the fork. |
+| **Sync Upstream** (`sync-upstream`) | `/sync-upstream:sync` | The routine follow-up to the three above. Fast-forwards the pristine `main` from `upstream`, lands those commits on the dev trunk via a reviewable PR, then detects any vendored documentation islands and hands off to their own update modes (`/repository-explorer:build --update`, `/skills-explorer:update`, `/atlas-explorer:build --update`) so the docs stay honest about the code that just moved. |
 
 ### Static explorers vs. The Atlas
 
@@ -50,20 +50,22 @@ copy-verbatim engine you lift into a target repo. See each plugin's `SKILL.md`.
 ```
 .claude-plugin/marketplace.json     # marketplace manifest (lists all plugins)
 
-adopt-repo/             commands/adopt-repo.md           skills/adopt-repo/SKILL.md   # the orchestrator
-skills-explorer/        commands/{build,update}-explorer.md
-                        skills/build-explorer/{SKILL.md, kit/, templates/, reference/, examples/}
-                        skills/update-explorer/{SKILL.md, scripts/, schemas/, references/}
-repository-explorer/    commands/repository-explorer.md  skills/repository-explorer/{SKILL.md, kit/, reference/, examples/}
-atlas-explorer/         commands/build-atlas.md          skills/atlas-explorer/{SKILL.md, kit/, reference/, templates/, examples/}
-private-mirror/         commands/mirror-repo.md          skills/...
-sync-upstream/          commands/sync-upstream.md        skills/sync-upstream/SKILL.md
+adopt-repo/             skills/adopt/SKILL.md            # the orchestrator
+skills-explorer/        skills/build/{SKILL.md, kit/, templates/, reference/, examples/}
+                        skills/update/{SKILL.md, scripts/, schemas/, references/}
+                        agents/explorer-update-worker.md
+repository-explorer/    skills/build/{SKILL.md, kit/, reference/, examples/}
+atlas-explorer/         skills/build/{SKILL.md, kit/, reference/, templates/, examples/}
+private-mirror/         skills/mirror/SKILL.md
+fork-trunk/             skills/setup/SKILL.md
+prd-reviewer/           skills/review/SKILL.md
+sync-upstream/          skills/sync/SKILL.md
 
 METHOD.md                           # the Skills & Prompts Explorer's tool-agnostic playbook
 ```
 
 For The Atlas specifically: the engine kit is at
-`atlas-explorer/skills/atlas-explorer/kit/`, the config surface and curated-YAML
+`atlas-explorer/skills/build/kit/`, the config surface and curated-YAML
 binding spec are in `reference/{METHOD,AUTHORING}.md`, an annotated config
 skeleton is in `templates/atlas.config.skeleton.yaml`, and a real worked
 instance is in `examples/lavernDev/`.
@@ -103,7 +105,7 @@ repo inherits it.
   run on a ~250-doc legal-AI platform (23 artifacts incl. 8 in-code system
   prompts). v0.3.0 adds polyglot literal discovery (including Go), exact
   repository-owned extraction, verified catalog bundles, immutable source
-  provenance, historical retention, and `/update-explorer` with hash-chained
+  provenance, historical retention, and `/skills-explorer:update` with hash-chained
   machine reports. v0.3.1 adds a bounded `model: haiku` update worker while keeping
   coverage, curation, quality, historical-retention, and publication decisions in the primary
   model. Explorer commits remain local until a PR is explicitly approved.
