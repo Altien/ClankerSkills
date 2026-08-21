@@ -1,6 +1,6 @@
 {
   "name": "adopt-repo",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Onboard an upstream OSS repo into the dev workspace end to end: create a private <name>-dev mirror, give it an altien-main development trunk, vendor the explorer skills into the repo so Claude in the cloud can build the documentation islands, then register those islands on the docs launcher. A sequencer over private-mirror, fork-trunk, the explorer skills, and rescan-docs.",
   "author": {
     "name": "Altien"
