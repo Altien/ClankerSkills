@@ -43,6 +43,15 @@
       }
     },
     {
+      "name": "sync-upstream",
+      "displayName": "Sync Upstream",
+      "source": "./sync-upstream",
+      "description": "Pull upstream changes into a dev-workspace repo set up by mirror-repo/fork-trunk/adopt-repo: fast-forward the pristine main from upstream, land those commits on the development trunk via a reviewable PR, then reconcile any vendored documentation islands (Repository Explorer, Skills & Prompts Explorer, The Atlas) with the changed code by handing off to their own update modes. Exposes /sync-upstream.",
+      "author": {
+        "name": "Altien"
+      }
+    },
+    {
       "name": "prd-reviewer",
       "displayName": "PRD Reviewer",
       "source": "./prd-reviewer",

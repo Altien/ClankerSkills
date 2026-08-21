@@ -24,6 +24,7 @@ you want and the skill auto-triggers.
 | **The Atlas** (`atlas-explorer`) | `/build-atlas` | A **live FastAPI** documentation navigator that binds every markdown doc to the code it describes: doc↔code 50/50 views, tree-sitter symbol slicing with fold regions, SQLite FTS5 search, live drift detection, authored journeys + clickable SVG diagrams, and anchored feedback with clipboard agent-brief export. |
 | **Private Mirror** (`private-mirror`) | `/mirror-repo` | Sets up the current empty directory as a **private mirror** of a public GitHub repo — pull upstream updates, but pushes to upstream are physically disabled and Actions are turned off before the first push. |
 | **Fork Trunk** (`fork-trunk`) | `/fork-trunk` | Gives an **existing fork** its own default development branch (e.g. `<org>-main`) that all work lands on, while `main` stays a pristine mirror of upstream you only sync from. Sets the trunk as the GitHub + local default, routes unmerged local work onto it via PR (never onto `main`), and can disable Actions on the fork. |
+| **Sync Upstream** (`sync-upstream`) | `/sync-upstream` | The routine follow-up to the three above. Fast-forwards the pristine `main` from `upstream`, lands those commits on the dev trunk via a reviewable PR, then detects any vendored documentation islands and hands off to their own update modes (`/repository-explorer --update`, `/update-explorer`, `/build-atlas --update`) so the docs stay honest about the code that just moved. |
 
 ### Static explorers vs. The Atlas
 
@@ -56,6 +57,7 @@ skills-explorer/        commands/{build,update}-explorer.md
 repository-explorer/    commands/repository-explorer.md  skills/repository-explorer/{SKILL.md, kit/, reference/, examples/}
 atlas-explorer/         commands/build-atlas.md          skills/atlas-explorer/{SKILL.md, kit/, reference/, templates/, examples/}
 private-mirror/         commands/mirror-repo.md          skills/...
+sync-upstream/          commands/sync-upstream.md        skills/sync-upstream/SKILL.md
 
 METHOD.md                           # the Skills & Prompts Explorer's tool-agnostic playbook
 ```
@@ -114,3 +116,7 @@ repo inherits it.
 - `private-mirror` v0.1.0.
 - `fork-trunk` v0.1.0 — distilled from setting up a private fork's `altien-main`
   trunk: keep `main` tracking upstream, develop on `<org>-main`, and disable CI.
+- `sync-upstream` v0.1.0 — the ongoing counterpart to `adopt-repo`'s one-time
+  setup: sync `main`, land it on the trunk via PR, then hand off to
+  `repository-explorer`/`update-explorer`/`build-atlas`'s own update modes so
+  vendored docs never silently drift from the code they describe.

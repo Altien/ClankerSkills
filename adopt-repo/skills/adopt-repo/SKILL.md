@@ -185,3 +185,6 @@ Print a final summary:
   `publishable` flag.
 - The two sync cheat-sheets the component skills printed (upstream → main, and
   develop-on-trunk), so the user has them in one place.
+- Point the user at **`/sync-upstream`** for catching this repo up later —
+  it's the ongoing counterpart to this one-time setup, and it also reconciles
+  the vendored documentation islands with whatever changed.
