@@ -68,9 +68,16 @@ continuing. Do not make the downstream library compensate for an insufficient Ex
 
 Read `DEST/AUTHORING.md` completely. For each artifact, author a `data/*.json` entry with
 an evidence-grounded assessment and a graph of its real ordered process. Every step or
-decision needs an exact source anchor and a specific 12–28 word note. A manifest-only pass
-may omit this phase only when the user explicitly requests it; label the resulting UI
-fallback as mechanical rather than authored.
+decision needs an exact source anchor and a specific 12–28 word note.
+
+Compose each graph with the **`diagram-design`** skill: one distinct idea per node, the
+5–9 step budget as a hard ceiling, edges only where they carry information, accents
+(`chips`/`tag`/`stop`) kept scarce, and its remove test run before the fragment ships.
+The engine owns the geometry and palette, so its style guide and connector rules don't
+apply here — the composition discipline does. `AUTHORING.md` has the details.
+
+A manifest-only pass may omit this phase only when the user explicitly requests it; label
+the resulting UI fallback as mechanical rather than authored.
 
 Edit the `EXPLORER_CONFIG` branding block and matching visible brand text in `index.html`.
 Do not alter the engine for repository-specific branding.

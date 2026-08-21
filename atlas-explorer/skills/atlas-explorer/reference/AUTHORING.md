@@ -81,6 +81,29 @@ A node whose anchor doesn't resolve is dangling (drift + verify failure). Node
 types map to the editorial palette (start/step/decision/output/stop). Clicking a
 node swaps the panel to the anchored doc section or code slice.
 
+**Compose each diagram with the `diagram-design` skill.** The Atlas engine draws
+the SVG for you — fixed geometry, fixed palette, fixed vertical flow — so its
+style guide, connector geometry, and output contract are all out of scope here.
+What transfers is the part you actually control, the composition, and it is worth
+invoking the skill for:
+
+- **Earn the diagram.** Its opening test: would the reader learn more from this
+  than from the doc's own prose? Only flow-heavy docs qualify — hence 2–4
+  diagrams, not one per doc.
+- **Hold its complexity budget: 9 nodes max.** Past that, split into an overview
+  diagram plus a detail diagram on the deeper doc, rather than one wall of boxes.
+- **Every node is one distinct idea.** Two steps that always travel together are
+  one node. Two nodes that anchor to the same heading probably are too.
+- **Every edge carries information.** The engine chains steps in order for free;
+  add `loop_to` only for a real revision loop, and give it a `when` label that
+  says what makes it fire.
+- **Run its remove test before you commit the YAML** — can a node be merged, an
+  edge dropped, a label shortened? The diagram is done when nothing can come out.
+
+Its universal anti-patterns are the failure mode to watch here: identical nodes
+with no hierarchy, and a `decision` node used for something that doesn't actually
+branch.
+
 ## `claims.yaml` — deterministic quantitative checks
 
 ```yaml

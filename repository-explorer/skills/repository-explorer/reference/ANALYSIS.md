@@ -38,9 +38,54 @@ so in a `callout-warn`. If a capability is scaffolded/stubbed, label it
 (amber/partial) rather than implying it ships. Don't overclaim; under-claiming a
 verified fact is also a defect.
 
-## 2. Choose the medium per diagram (Phase 3)
+## 2. Design the diagrams with `diagram-design` (Phase 3)
 
-You ship diagrams two ways. Pick deliberately:
+**Invoke the `diagram-design` skill before drawing anything.** It owns the visual
+grammar for this deliverable; this file only says how its output lands in the
+explorer. Working order for each diagram:
+
+1. **Earn it.** Its first question is the right one: would the reader learn more
+   from this than from a well-written paragraph or a 3-column table? If not,
+   write the table. A repo analysis with three sharp diagrams beats one with ten.
+2. **Choose the type** from its visual-type guide — for a codebase that is
+   usually *architecture* (system topology), *data flow* or *sequence* (the real
+   request path), *state machine*, *dependency graph*, *deployment*, *layer
+   stack*, or *ER / database schema*. If behavior carries the meaning (trust
+   boundaries and permitted ingress, fan-in bottlenecks, compensating controls),
+   pick the semantic pattern first, then the nearest type. **Load the type
+   reference it links** — the layout grammar lives there, not in the main file.
+3. **State the plan** (type, size, what the budget forces out) before drawing.
+4. **Hold the complexity budget:** max 9 nodes, 12 arrows, and the per-type caps
+   (8 ER entities, 5 sequence lifelines, 5 layers, 9 dependency nodes). Over
+   budget means split into overview + detail — exactly the overview/subsystem
+   split this analysis wants anyway.
+5. **Obey the six mandatory connector rules** — rounded right-angle elbows
+   (`r=8`, no diagonal slants), a visible 6–10px gap between every arrow label's
+   mask and its stroke, no overlapping connectors, fanned attach points (≥12px
+   apart, never two arrows on one point), no transit behind a non-endpoint box,
+   and no label mask overlapping a later-drawn node. Each breach is an automatic
+   fail there and should be here too.
+6. **Run its pre-output checklist** (the remove test especially: can a node be
+   merged, an arrow dropped, a label deleted?) before the diagram ships.
+
+Two carve-outs, because these diagrams live inside the explorer rather than in a
+standalone branded page:
+
+- **Colour and typography come from `architecture.css`** (see section 3), not
+  from `diagram-design`'s style guide, and you do not load its Google Fonts. Its
+  focal rule still binds: `nb-accent` / `ed-accent` on **1–2 elements per
+  diagram**, everything else neutral. Skip its first-run style-guide gate.
+- **You ship inline SVG inside the analysis page**, not a standalone HTML file,
+  so its single-file output contract and `scripts/self_check.py` do not apply.
+  Its accessible-SVG contract does — see section 3.
+
+Everything else — selection, budget, geometry, layout grid, taste gate — applies
+in full. Its universal anti-patterns are the ones that make an analysis page look
+machine-generated: identical boxes for every node, shadows, `rounded-2xl`, accent
+on everything "important", a legend floating inside the diagram area, unmasked
+arrow labels, mono as a blanket "dev" font.
+
+Then pick the medium deliberately:
 
 | Use **mermaid** (in the Markdown doc) when… | Use **hand-authored inline SVG** (in the HTML) when… |
 |---|---|
@@ -50,7 +95,10 @@ You ship diagrams two ways. Pick deliberately:
 
 The browser renders ```mermaid fences (mermaid is vendored, `securityLevel:
 strict`). The HTML SVGs are styled by `architecture.css` classes so they follow
-light/dark automatically.
+light/dark automatically. `diagram-design`'s selection, remove test, and node
+budget apply to the mermaid diagrams too — its connector geometry does not, since
+mermaid does its own routing. Don't reproduce a mermaid auto-layout by hand in
+SVG: if a diagram is worth hand-authoring, it is worth an editorial layout.
 
 ## 3. Inline-SVG authoring (the HTML pages)
 
@@ -76,9 +124,14 @@ Conventions:
 - One `start`/entry and one terminal per flow; arrows show the **real coded
   order**, including the branch arrows (errors, short-circuits, refusals) — those
   are what make it honest rather than idealized.
-- Give every `<svg>` a `viewBox` and `role="img"` + `aria-label`. Keep numbers
-  finite and boxes inside the canvas (verify.cjs tag-balances the page; eyeball
-  geometry via `serve.py`).
+- Give every `<svg>` a `viewBox` and `role="img"` + `aria-label` (or
+  `aria-labelledby` resolving to a `<title>` + `<desc>` pair with IDs prefixed per
+  diagram, per `diagram-design`'s accessible-SVG contract). Keep numbers finite
+  and boxes inside the canvas (verify.cjs tag-balances the page; eyeball geometry
+  via `serve.py`).
+- Draw arrows before boxes, and keep every coordinate, size, and gap on
+  `diagram-design`'s 4px grid — it is what makes a hand-authored SVG read as
+  designed rather than nudged into place.
 - **Links:** a source-code file opens raw via `../../<path>` (`target="_blank"`);
   a Markdown doc that the explorer indexes opens in-app via
   `index.html#/<path>`. Never link a code file through `index.html#/` — the
@@ -106,4 +159,6 @@ two are different renderings of one investigation, not two investigations.
 Every label, row, and number is specific to this repo and traceable to a file.
 The analysis is verified against code and flags doc↔code divergences. Diagrams
 are split sensibly between mermaid (quick/maintainable) and SVG (expressive/
-precise), and both follow the theme. No fabrication; flag present-vs-inferred.
+precise), both follow the theme, and each one passes `diagram-design`'s
+pre-output checklist — right type, inside the complexity budget, no connector-rule
+breach, accent on 1–2 elements. No fabrication; flag present-vs-inferred.

@@ -215,6 +215,17 @@ exact layout, labelled boundaries, branch arrows, and theme-following vectors.
 For a large codebase, fan out the authoring (one subsystem section per agent),
 then assemble.
 
+**Every diagram is designed with the `diagram-design` skill.** Invoke it before
+you draw anything and treat it as the design authority: choose the visual type
+from its guide (architecture, sequence, state, data flow, deployment, dependency,
+layer stack, …), load that type reference, state type + planned cuts before
+drawing, and hold to its complexity budget (max 9 nodes, 12 arrows — past that,
+split into overview + detail), its six mandatory connector rules, its universal
+anti-patterns, and its pre-output checklist. The same selection and budget
+discipline applies to the mermaid fences; the connector geometry does not, since
+mermaid routes itself. Two carve-outs, because these SVGs live inside the
+explorer rather than in a standalone page — see `REF/ANALYSIS.md` for both.
+
 ## Phase 4 — Verify (drive to zero failures)
 
 ```

@@ -85,7 +85,10 @@ Use the plan's `added`, `updated`, `restored`, and `historical` sets.
 The plan also reports `stale_curated` and coverage hashes; planning reports these review
 requirements but publication enforces them.
 
-- Author assessments and workflow graphs for additions and restorations.
+- Author assessments and workflow graphs for additions and restorations. Compose every new
+  or reworked graph with the **`diagram-design`** skill, per `DEST/AUTHORING.md`: one
+  distinct idea per node, the 5–9 step ceiling, edges only where they carry information,
+  and its remove test before the fragment ships.
 - Re-read updated bodies. Change an assessment when behavior changed and a graph when the
   process changed.
 - If existing curation remains accurate after a wording-only body change, pass

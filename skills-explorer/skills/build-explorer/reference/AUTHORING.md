@@ -85,6 +85,30 @@ Node shape:
    guardrails" step anchored to one of those headings.
 8. Plain text everywhere. No markdown in labels/notes/assessment strings.
 
+## Compose the graph with `diagram-design`
+
+The Explorer engine renders the graph — fixed geometry, fixed palette, fixed
+node shapes — so `diagram-design`'s style guide, connector rules, and output
+contract are out of scope. Its **composition** discipline is not, and it is worth
+invoking the skill for before you author a curated graph:
+
+- **Earn each node.** Every node is one distinct idea; two steps that always
+  travel together are one node (this is rule 7 above, stated as a principle).
+- **The 5-9 step budget above is its complexity budget** (9 nodes, 12 edges max).
+  If a skill's real process won't fit, you are modelling headings instead of the
+  process — collapse the boilerplate, don't raise the ceiling.
+- **Every edge carries information.** Sequential order is free; add `loopTo` /
+  `skipTo` only for a real loop or a real short-circuit, and label the `when`
+  with what actually triggers it.
+- **Signal is scarce.** `chips`, `tag`, and `stop` are the accents — a handful
+  per graph. Tagging every node "important" erases the signal entirely.
+- **Run its remove test before you commit the fragment:** can a node be merged,
+  an edge dropped, a label shortened? The graph is done when nothing can come
+  out, not when everything is in.
+
+Its anti-patterns to watch here: identical undifferentiated nodes, a `decision`
+node for something that never branches, and one node per heading.
+
 ## Grounding rules
 
 - Read the WHOLE source file before writing its entry.

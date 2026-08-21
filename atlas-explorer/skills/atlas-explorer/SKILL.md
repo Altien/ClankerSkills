@@ -182,6 +182,12 @@ the bar in practice. Fan out sub-agents for a large corpus.
   notice.
 - **`curated/diagrams.yaml`** — 2–4 flow diagrams for the flow-heavy docs.
   Every node anchors to a real heading/symbol and carries a one-line summary.
+  Compose each one with the **`diagram-design`** skill: earn the diagram, one
+  distinct idea per node, ≤9 nodes (split overview/detail past that), edges only
+  where they carry information, and run its remove test before committing the
+  YAML. The engine owns the geometry and palette, so its style guide and
+  connector rules don't apply — the composition discipline does. See
+  `REF/AUTHORING.md`.
 - **`curated/claims.yaml`** — find quantitative claims in the docs ("N modules",
   "N tests across M files"); verify each against the tree yourself first, then
   pair it with a deterministic counter. `expected` is what the **doc** says, so
