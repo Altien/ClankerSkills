@@ -56,6 +56,18 @@ disabled or absent). Then work out which setup this is:
 
 If it's ambiguous, ask rather than guess — the two models diverge from here.
 
+**The pristine branch isn't always called `main`.** Some forks keep upstream's
+default under its own name — e.g. `Altien/DocHaus2Dev` keeps `dochaus` as the
+pristine mirror of `upstream/dochaus` and develops on `altien-main`. Call that
+branch `MIRROR` (the local branch whose upstream is `upstream/<upstream-default>`);
+wherever this skill says `main`, read `MIRROR`.
+
+**Worktrees.** `MIRROR` and the trunk may be checked out in different
+worktrees (`git worktree list`). `git switch` fails on a branch checked out
+elsewhere — run that step from the worktree that holds it, or update it
+without a checkout: `git fetch upstream <upstream-default>:MIRROR` (fast-forward
+only).
+
 ## 2. Fast-forward `main` (or the default branch) from upstream
 
 ```
@@ -110,23 +122,47 @@ git log TRUNK..main --oneline
   review pass. Tell the user the PR is ready and **wait** for them to merge it
   before continuing — the doc tools in step 5 need the merged code on disk.
 
-## 4. Detect vendored documentation islands
+## 4. Detect documentation islands
 
-Check for what `/adopt-repo:adopt` Phase 2 vendors, using the same mapping:
+Detect islands by their **docs dir on the trunk**, not by vendored skills —
+islands can exist without `.claude/skills/` (built from locally installed
+plugins):
 
-| Island | Skill dir | Docs dir |
-|--------|-----------|----------|
-| Repository Explorer | `.claude/skills/build/` | `docs/repository-explorer/` |
-| Skills & Prompts Explorer | `.claude/skills/build/` | `docs/explorer/` |
-| The Atlas | `.claude/skills/build/` | `docs/atlas/` |
+| Island | Docs dir | Update command |
+|--------|----------|----------------|
+| Repository Explorer | `docs/repository-explorer/` | `/repository-explorer:build --update` |
+| Skills & Prompts Explorer | `docs/explorer/` | `/skills-explorer:update` |
+| The Atlas | `docs/atlas/` | `/atlas-explorer:build --update` |
 
-List which are present. If none are present, report "no vendored explorer
-skills found — nothing to reconcile" and stop; this repo predates
-`/adopt-repo:adopt` or its docs live elsewhere. If `--no-docs` was passed, skip this
+List which are present. If none are present, report "no documentation islands
+found — nothing to reconcile" and stop. If `--no-docs` was passed, skip this
 section and step 5 entirely — the user only wanted the git sync.
+
+**Where the update runs:** if the explorer plugins are installed locally (they
+appear as `repository-explorer:*`, `skills-explorer:*`, `atlas-explorer:*` in
+the skill list), run the updates locally in a **fresh session** on the trunk —
+no vendoring or cloud needed. Otherwise use the cloud handoff in step 5, which
+needs the skills vendored under `.claude/` (see `/adopt-repo:adopt` Phase 2).
+
+**The Atlas refuses to start after doc churn.** Its config has no catch-all
+category and validates curation, so an upstream merge that adds or deletes
+`.md` files breaks it ("docs matched no category rule" / "curated summaries
+for unknown docs"). Fix it right after the merge, before anything else: add a
+`category_rules` entry per new doc in `docs/atlas/atlas.config.yaml`, and
+drop entries for deleted docs from `docs/atlas/curated/*.yaml` (check
+`git log -1 -- <deleted doc>` — if upstream dropped a pipeline step, drop its
+diagram node too). Confirm with a start-up: `python docs/atlas/app.py` or the
+launcher build.
+
+**Mermaid.** All three islands render mermaid at current plugin versions
+(repository-explorer ≥0.4.0, skills-explorer ≥0.4.1, atlas-explorer ≥0.3.2).
+An island built by an older plugin version doesn't pick it up from a sync —
+run its update command to re-import the tooling. After an update, the static
+explorers must ship `assets/mermaid.min.js`.
 
 ## 5. Hand off doc reconciliation to the cloud, then PAUSE
 
+(Skip to the local route from step 4 when the plugins are installed here.)
 Generation is heavy, same as `/adopt-repo:adopt` Phase 3 — offload it to Claude in
 the cloud against the now-synced trunk. Print a handoff block covering only
 the islands actually present, then **stop and wait**:
@@ -160,6 +196,22 @@ git log --stat -1   # see what the doc commit touched
 Remind the user to restart any locally-running Atlas server so it picks up
 the fresh index.
 
+## 7. Republish to the web
+
+If the repo's islands are registered in the docs launcher
+(`C:\Data\Projects\Mike\MikeForxExplorer\registry.json`, matched by the
+first segment of each entry's `dir` — the checkout folder name), republish
+from `MikeForxExplorer/`:
+
+```
+python -m build --repo <checkout-folder> --publish
+python -m build --hub --publish        # only if registry names/entries changed
+```
+
+This is the launcher's `/publish-docs` skill — follow it for prerequisites
+(wrangler login, Atlas deps) and the Cloudflare Access reminder: a hostname
+deployed for the first time is **public** until added to the Access app.
+
 ## Verify & report
 
 - `main` still equals `upstream/<upstream-default>` (fork-trunk model only —
@@ -167,6 +219,7 @@ the fresh index.
 - The sync PR's status (open, awaiting review, or merged).
 - Which islands were reconciled, which were skipped, and why (absent, or
   `--no-docs`).
+- The live `https://<project>.pages.dev` URL if republished (step 7).
 - A short cheat-sheet so this becomes routine:
   ```
   # next time:
