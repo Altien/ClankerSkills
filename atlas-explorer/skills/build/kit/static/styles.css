@@ -875,3 +875,69 @@ html[data-theme="dark"] {
   .sidebar { position: static; max-height: none; border-right: none; border-bottom: 1px solid var(--border); }
   .content { padding: 1.4rem 1.2rem 4rem; }
 }
+
+/* ── Mermaid lightbox: click a rendered diagram to zoom/pan it full-screen ── */
+.mermaid[data-processed] { position: relative; }
+.mermaid[data-processed] svg { cursor: zoom-in; }
+.mermaid[data-processed]::after {
+  content: "⤢ expand";
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  line-height: 1;
+  color: var(--fg-muted);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 9px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+.mermaid[data-processed]:hover::after { opacity: 1; }
+
+.mmlb { position: fixed; inset: 0; z-index: 1000; display: none; overflow: hidden; outline: none; }
+.mmlb.open { display: block; }
+.mmlb::before { content: ""; position: absolute; inset: 0; background: var(--bg); opacity: 0.94; }
+.mmlb-stage { position: absolute; inset: 0; cursor: grab; touch-action: none; }
+.mmlb-stage.dragging { cursor: grabbing; }
+.mmlb-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+.mmlb-canvas svg { display: block; border-radius: 10px; }
+.mmlb-tools {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  padding: 5px 7px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+}
+.mmlb-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+.mmlb-btn:hover { background: var(--bg-sink); }
+body.mmlb-lock { overflow: hidden; }
