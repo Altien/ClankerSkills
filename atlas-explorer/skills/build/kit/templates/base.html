@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/static/styles.css">
   <link rel="stylesheet" href="/pygments.css">
   <script src="/static/htmx.min.js" defer></script>
+  <script src="/static/mermaid.min.js" defer></script>
   <script>
     // Apply persisted theme before first paint to avoid a flash.
     (function () {
@@ -127,9 +128,29 @@
       try { localStorage.setItem("atlas-theme", next); } catch (e) {}
     });
 
+    // Mermaid diagrams: ```mermaid fences arrive as <pre class="mermaid">.
+    // Rendered client-side from the vendored bundle (offline, no CDN), on
+    // first load and again after htmx swaps; data-processed guards re-runs.
+    var mermaidInited = false;
+    function renderMermaid() {
+      if (typeof mermaid === "undefined") return;
+      if (!mermaidInited) {
+        mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: "neutral" });
+        mermaidInited = true;
+      }
+      var nodes = document.querySelectorAll(".mermaid:not([data-processed])");
+      if (nodes.length) {
+        mermaid.run({ nodes: nodes }).catch(function (err) {
+          console.error("mermaid render failed:", err);
+        });
+      }
+    }
+    document.addEventListener("DOMContentLoaded", renderMermaid);
+
     // Open the 50/50 split whenever the code panel receives content,
     // and scroll the panel to the jump-target symbol when there is one.
     document.body.addEventListener("htmx:afterSwap", function (evt) {
+      renderMermaid();
       if (evt.target && evt.target.id === "code-panel") {
         document.body.classList.toggle("panel-open", evt.target.innerHTML.trim() !== "");
         var target = evt.target.querySelector(".hl-target");

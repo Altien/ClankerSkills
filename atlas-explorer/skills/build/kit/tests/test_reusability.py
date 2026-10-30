@@ -29,7 +29,8 @@ def _engine_files():
 def test_engine_is_repo_agnostic():
     offenders = []
     for path in _engine_files():
-        if path.suffix in (".pyc",) or not path.is_file():
+        # ponytail: vendored minified bundles are third-party; "forme" ⊂ "performed"
+        if path.suffix in (".pyc",) or path.name.endswith(".min.js") or not path.is_file():
             continue
         text = path.read_text(encoding="utf-8", errors="replace").lower()
         for word in FORBIDDEN:

@@ -67,11 +67,26 @@ def _render_code_inline(self, tokens, idx, options, env):
     return f"<code>{escaped}</code>"
 
 
+def _render_fence(self, tokens, idx, options, env):
+    """```mermaid fences pass through verbatim (HTML-escaped, no Pygments/lexer)
+    as <pre class="mermaid"> for client-side mermaid.js rendering.
+
+    Every other fence keeps the default rendering.
+    """
+    token = tokens[idx]
+    info = (token.info or "").strip()
+    lang = info.split(maxsplit=1)[0].lower() if info else ""
+    if lang == "mermaid":
+        return f'<pre class="mermaid">{html_mod.escape(token.content)}</pre>\n'
+    return self.fence(tokens, idx, options, env)
+
+
 def _make_md() -> MarkdownIt:
     md = MarkdownIt("commonmark", {"html": True, "linkify": False}).enable("table").enable(
         "strikethrough"
     )
     md.add_render_rule("code_inline", _render_code_inline)
+    md.add_render_rule("fence", _render_fence)
     return md
 
 
