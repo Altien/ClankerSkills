@@ -571,6 +571,7 @@
       }
       body.innerHTML = '<p class="np-srcmeta">' + esc(a.source_path) + " · " + label + '</p>' + inner;
     }
+    renderMermaid(body);
   }
   // Narrow a section/body to the item that starts at the line containing `focus`
   // (verbatim substring). For list items: run until the next sibling item at the
@@ -699,6 +700,21 @@
       (r.note ? ' — <span class="note">' + esc(r.note) + "</span>" : "") + "</li>";
   }
 
+  // Mermaid: marked.min.js emits <pre class="mermaid"> for ```mermaid fences;
+  // render them if the optional vendored mermaid.min.js is loaded.
+  var mermaidInited = false;
+  function renderMermaid(root) {
+    if (typeof mermaid === "undefined") return;
+    var nodes = root.querySelectorAll(".mermaid:not([data-processed])");
+    if (!nodes.length) return;
+    if (!mermaidInited) {
+      var dark = document.documentElement.getAttribute("data-theme") === "dark";
+      mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: dark ? "dark" : "default" });
+      mermaidInited = true;
+    }
+    mermaid.run({ nodes: nodes }).catch(function (err) { console.error("mermaid render failed:", err); });
+  }
+
   // ───────────────────────────── lazy source ─────────────────────────────
   function loadSource(a) {
     var body = document.getElementById("src-body");
@@ -707,6 +723,7 @@
       .then(function (text) {
         if (/\.md$/.test(a.source_path)) {
           body.innerHTML = '<div class="md-body">' + window.marked(text) + "</div>";
+          renderMermaid(body);
         } else {
           // code source (python / yaml / ts) — pretty-print the excerpt with
           // line numbers; codeExcerpt slices embedded line ranges itself.

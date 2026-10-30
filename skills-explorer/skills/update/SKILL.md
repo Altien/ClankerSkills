@@ -55,6 +55,11 @@ Refresh `SELF/scripts/catalog_bundle.py`, `SELF/schemas/*.json`, and
 `DEST/CATALOG_SCHEMA.md` before each update. These files are copied verbatim and checked
 into the source repository, so tool/schema upgrades are explicit in its diff.
 
+Likewise refresh the static engine verbatim: `BUILD/kit/assets/app.js`,
+`marked.min.js`, and `mermaid.min.js` into `DEST/assets/`. `DEST/index.html` is adapted
+per repository, so port new `<script>` tags from `BUILD/kit/index.html` by hand (for
+example the `assets/mermaid.min.js` line) rather than overwriting it.
+
 Compare `DEST/build_explorer.py` with the current
 `BUILD/templates/build_explorer.skeleton.py`. Port reusable scanner improvements while
 preserving repository-specific adapters; never overwrite the adapted builder wholesale.

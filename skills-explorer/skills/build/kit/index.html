@@ -51,8 +51,11 @@
 
   <!-- Curated graphs/editorial (authored) — loaded before the app so it can merge by id -->
   <script src="assets/explorer-data.js"></script>
-  <!-- Single vendored asset: in-house minimal Markdown renderer (no network deps) -->
+  <!-- In-house minimal Markdown renderer (no network deps) -->
   <script src="assets/marked.min.js"></script>
+  <!-- Vendored Mermaid — renders ```mermaid fences. Optional: delete this line and
+       assets/mermaid.min.js to ship without it (fences then show as plain text). -->
+  <script src="assets/mermaid.min.js"></script>
   <!-- SPA: router, tree/search, detail rendering, SVG diagram generator -->
   <script src="assets/app.js"></script>
 </body>
