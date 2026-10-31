@@ -1019,3 +1019,143 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 })();
+
+// ── Mermaid lightbox: click a rendered diagram to zoom/pan it full-screen ──
+// Shared with the Atlas and Repository Explorer kits. Delegated (survives
+// re-renders); overlay is built once, lazily, and reused.
+(function () {
+  var TRIGGER = ".mermaid[data-processed] svg";
+  var box = null, stage = null, canvas = null, lastFocus = null;
+  var natW = 0, natH = 0, scale = 1, fitScale = 1, tx = 0, ty = 0;
+  var dragging = false, dragMoved = false, px = 0, py = 0;
+
+  function build() {
+    box = document.createElement("div");
+    box.className = "mmlb";
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-modal", "true");
+    box.setAttribute("aria-label", "Diagram viewer");
+    box.tabIndex = -1;
+    box.innerHTML =
+      '<div class="mmlb-stage"></div>' +
+      '<div class="mmlb-tools">' +
+      '<button type="button" class="mmlb-btn" data-mmlb="out" aria-label="Zoom out" title="Zoom out (-)">−</button>' +
+      '<button type="button" class="mmlb-btn" data-mmlb="in" aria-label="Zoom in" title="Zoom in (+)">+</button>' +
+      '<button type="button" class="mmlb-btn" data-mmlb="fit" aria-label="Fit to screen" title="Fit to screen (0)">⤢</button>' +
+      '<button type="button" class="mmlb-btn" data-mmlb="close" aria-label="Close" title="Close (Esc)">×</button>' +
+      '</div>';
+    document.body.appendChild(box);
+    stage = box.querySelector(".mmlb-stage");
+
+    box.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-mmlb]");
+      if (btn) {
+        var act = btn.getAttribute("data-mmlb");
+        if (act === "close") close();
+        else if (act === "fit") fitView();
+        else zoomAt(box.clientWidth / 2, box.clientHeight / 2, act === "in" ? 1.35 : 1 / 1.35);
+      } else if (e.target === stage && !dragMoved) {
+        close(); // backdrop click (not the end of a drag) closes
+      }
+    });
+    box.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.15 : 1 / 1.15);
+    }, { passive: false });
+    stage.addEventListener("pointerdown", function (e) {
+      if (e.button !== 0) return;
+      dragging = true;
+      dragMoved = false;
+      px = e.clientX;
+      py = e.clientY;
+      stage.classList.add("dragging");
+      if (stage.setPointerCapture) stage.setPointerCapture(e.pointerId);
+    });
+    stage.addEventListener("pointermove", function (e) {
+      if (!dragging) return;
+      var dx = e.clientX - px, dy = e.clientY - py;
+      if (Math.abs(dx) + Math.abs(dy) > 3) dragMoved = true;
+      tx += dx;
+      ty += dy;
+      px = e.clientX;
+      py = e.clientY;
+      apply();
+    });
+    stage.addEventListener("pointerup", function () {
+      dragging = false;
+      stage.classList.remove("dragging");
+    });
+    document.addEventListener("keydown", function (e) {
+      if (!box.classList.contains("open")) return;
+      if (e.key === "Escape") { e.preventDefault(); close(); }
+      else if (e.key === "+" || e.key === "=") zoomAt(box.clientWidth / 2, box.clientHeight / 2, 1.35);
+      else if (e.key === "-" || e.key === "_") zoomAt(box.clientWidth / 2, box.clientHeight / 2, 1 / 1.35);
+      else if (e.key === "0") fitView();
+    });
+  }
+
+  function apply() {
+    var t = "translate(" + tx + "px, " + ty + "px) scale(" + scale + ")";
+    canvas.style.transform = t;
+  }
+
+  function fitView() {
+    var vw = box.clientWidth, vh = box.clientHeight;
+    fitScale = Math.min((vw - 64) / natW, (vh - 120) / natH);
+    if (!isFinite(fitScale) || fitScale <= 0) fitScale = 1;
+    scale = fitScale;
+    tx = (vw - natW * scale) / 2;
+    ty = (vh - natH * scale) / 2;
+    apply();
+  }
+
+  function zoomAt(cx, cy, factor) {
+    var next = Math.max(0.05, Math.min(40, scale * factor));
+    tx = cx - ((cx - tx) * next) / scale;
+    ty = cy - ((cy - ty) * next) / scale;
+    scale = next;
+    apply();
+  }
+
+  function open(svg) {
+    if (!box) build();
+    lastFocus = document.activeElement;
+    var rect = svg.getBoundingClientRect();
+    var vb = svg.viewBox && svg.viewBox.baseVal;
+    natW = (vb && vb.width) || rect.width || 800;
+    natH = (vb && vb.height) || rect.height || 600;
+    var clone = svg.cloneNode(true);
+    clone.removeAttribute("width");
+    clone.removeAttribute("height");
+    clone.style.maxWidth = "none";
+    clone.style.width = natW + "px";
+    clone.style.height = natH + "px";
+    canvas = document.createElement("div");
+    canvas.className = "mmlb-canvas";
+    canvas.style.width = natW + "px";
+    canvas.style.height = natH + "px";
+    canvas.appendChild(clone);
+    stage.innerHTML = "";
+    stage.appendChild(canvas);
+    box.classList.add("open");
+    document.body.classList.add("mmlb-lock");
+    fitView();
+    box.focus();
+  }
+
+  function close() {
+    box.classList.remove("open");
+    document.body.classList.remove("mmlb-lock");
+    stage.innerHTML = "";
+    canvas = null;
+    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+    lastFocus = null;
+  }
+
+  document.addEventListener("click", function (e) {
+    if (!e.target || !e.target.closest) return;
+    if (e.target.closest("a")) return; // links inside diagrams still navigate
+    var svg = e.target.closest(TRIGGER);
+    if (svg) open(svg);
+  });
+})();
