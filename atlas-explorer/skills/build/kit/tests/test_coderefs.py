@@ -108,6 +108,25 @@ def test_code_partial_rejects_traversal(code_repo):
     assert "escapes" in response.text
 
 
+def test_code_panel_withholds_secrets_and_git_ignored_files(code_repo, sample_repo):
+    import subprocess
+
+    (sample_repo / ".env").write_text("API_KEY=sk-live-should-never-render\n", encoding="utf-8")
+    (sample_repo / ".env.example").write_text("API_KEY=\n", encoding="utf-8")
+    (sample_repo / "local.cfg").write_text("TOKEN=also-secret\n", encoding="utf-8")
+    (sample_repo / ".gitignore").write_text("local.cfg\n", encoding="utf-8")
+    subprocess.run(["git", "init", "-q", str(sample_repo)], check=True)
+    client = TestClient(app_module.create_app(code_repo))
+
+    for path in (".env", "local.cfg", ".git/config"):
+        for response in (client.get("/partial/code", params={"path": path}), client.get(f"/raw/{path}")):
+            assert response.status_code == 400, path
+            assert "should-never-render" not in response.text and "also-secret" not in response.text
+    assert client.get("/partial/code", params={"path": ".env.example"}).status_code == 200
+    listing = client.get("/partial/code", params={"path": "."}).text
+    assert ".env.example" in listing and ">.env<" not in listing and "local.cfg" not in listing
+
+
 def test_code_partial_missing_file_404(code_repo):
     client = TestClient(app_module.create_app(code_repo))
     response = client.get("/partial/code", params={"path": "src/nope.ts"})

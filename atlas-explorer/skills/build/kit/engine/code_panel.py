@@ -7,8 +7,10 @@ variant is scoped under html[data-theme="dark"].
 
 from __future__ import annotations
 
+import fnmatch
 import html
 import re
+import subprocess
 from functools import lru_cache
 from pathlib import Path
 from urllib.parse import quote
@@ -38,13 +40,50 @@ class PanelError(Exception):
 
 
 def safe_resolve(repo_root: Path, raw_path: str) -> Path:
-    """Resolve a repo-relative request path, refusing escapes."""
+    """Resolve a repo-relative request path, refusing escapes and secrets."""
     candidate = (repo_root / raw_path).resolve()
     try:
-        candidate.relative_to(repo_root.resolve())
+        rel = candidate.relative_to(repo_root.resolve())
     except ValueError:
         raise PanelError(f"path escapes the repository: {raw_path}") from None
+    if withheld(repo_root, rel.as_posix()):
+        raise PanelError(f"withheld: {raw_path} is git-ignored or looks like a secrets file")
     return candidate
+
+
+# Secrets must never reach the panel, /raw, or a static export: docs often
+# *mention* `backend/.env`, and the panel would otherwise render it verbatim.
+SECRET_DIRS = {".git", ".ssh", ".aws", ".azure", ".gnupg"}
+SECRET_NAMES = (
+    ".env", ".env.*", "*.pem", "*.key", "*.p12", "*.pfx", "*.jks", "*.keystore",
+    "id_rsa*", "id_dsa*", "id_ecdsa*", "id_ed25519*", ".npmrc", ".pypirc", ".netrc",
+    ".git-credentials", ".htpasswd", "credentials.json", "secrets.json", "secrets.y*ml",
+    "local.settings.json", "*.tfvars", "*.tfstate", "*.tfstate.*",
+)
+SAFE_SUFFIXES = (".example", ".sample", ".template", ".dist", ".pub")
+
+
+def withheld(repo_root: Path, rel: str) -> bool:
+    """True when `rel` (repo-relative, posix) must not be shown: secret-shaped or git-ignored."""
+    parts = [p for p in rel.split("/") if p]
+    if any(p.lower() in SECRET_DIRS for p in parts):
+        return True
+    name = parts[-1].lower() if parts else ""
+    if not name.endswith(SAFE_SUFFIXES) and any(fnmatch.fnmatch(name, pat) for pat in SECRET_NAMES):
+        return True
+    return bool(parts) and _git_ignored(str(repo_root.resolve()), rel)
+
+
+@lru_cache(maxsize=4096)
+def _git_ignored(root: str, rel: str) -> bool:
+    # Exit 0 = ignored (and untracked); 1 = not ignored; 128 = not a git repo → allow.
+    # ponytail: one subprocess per new path, cached; batch via --stdin if exports get slow.
+    try:
+        r = subprocess.run(["git", "-C", root, "check-ignore", "-q", "--", rel],
+                           capture_output=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return r.returncode == 0
 
 
 @lru_cache(maxsize=1)
@@ -265,10 +304,14 @@ def render_dir(repo_root: Path, raw_path: str) -> str:
     if not path.is_dir():
         raise PanelError(f"not a directory: {raw_path}")
 
-    entries = sorted(path.iterdir(), key=lambda p: (p.is_file(), p.name.lower()))
+    root = repo_root.resolve()
+    entries = sorted(
+        (e for e in path.iterdir() if not withheld(repo_root, e.relative_to(root).as_posix())),
+        key=lambda p: (p.is_file(), p.name.lower()),
+    )
     items = []
     for entry in entries:
-        rel = entry.relative_to(repo_root.resolve()).as_posix()
+        rel = entry.relative_to(root).as_posix()
         name = entry.name + ("/" if entry.is_dir() else "")
         items.append(
             f'<li><a class="panel-dir-entry" href="#code-panel" '

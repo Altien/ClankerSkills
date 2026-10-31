@@ -7,6 +7,7 @@ any session can act on it without re-deriving where it points.
 
 from __future__ import annotations
 
+from .code_panel import PanelError, safe_resolve
 from .comments import Comment
 from .indexer import iter_sections
 
@@ -37,7 +38,10 @@ def _context_for(comment: Comment, registry, max_lines: int) -> tuple[str, str]:
         return "", ""
 
     if comment.anchor_kind in ("code-symbol", "code-file"):
-        path = repo_root / (comment.path or "")
+        try:
+            path = safe_resolve(repo_root, comment.path or "")
+        except PanelError:
+            return "", ""
         if not path.is_file():
             return "", ""
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -85,7 +89,10 @@ def _context_for(comment: Comment, registry, max_lines: int) -> tuple[str, str]:
 def _anchored_text(target, registry) -> str:
     """Raw source text behind a journey stop or diagram node anchor."""
     if getattr(target, "path", None):
-        path = registry.config.repo_root / target.path
+        try:
+            path = safe_resolve(registry.config.repo_root, target.path)
+        except PanelError:
+            return ""
         if not path.is_file():
             return ""
         text = path.read_text(encoding="utf-8", errors="replace")
